@@ -2,7 +2,7 @@
 
 Code for the LLM-group standing design (mechanisms, not hardcoded reputation scores).
 
-Owner: [N-T-SH](https://github.com/N-T-SH). This repo is the **only** code tree going forward. `resilient-lab` keeps older experiments.
+Owner: [N-T-SH](https://github.com/N-T-SH). This repo is the **only** code tree going forward. 
 
 ## Status
 
