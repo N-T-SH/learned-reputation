@@ -1,7 +1,10 @@
-# Locked (Week 0 → Week 1)
+# Locked (T0 → T1)
 
-- Include next round if last visible c_j ≥ 0.5.
-- Null: random include each round, ignore history (not between episodes; not fixed-group).
-- Visibility: local.
-- Withhold: reputation scalar, update rule, gossip-into-score, score-coupled connect, the word REPUTATION in agent prompts.
-- Give: nomination, messages (not in this toy yet), raw event memory.
+- Visibility: **local**.
+- Groups: **bilateral form / unilateral break** (mutual nominate).
+- Units: **y = 1**, threshold **0.5**, r = 1.6, isolation = 0.8.
+- N = 4 until `include_next` works, then N = 6.
+- Repo: `learned-reputation`.
+- Positive: include j next round iff last visible c_j ≥ 0.5 (None → include).
+- Null: random include each round; ignore history.
+- Withhold: reputation scalar, update, gossip-into-score, score-coupled connect, the word REPUTATION in prompts.

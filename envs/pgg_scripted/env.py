@@ -1,4 +1,4 @@
-"""Tiny linear PGG + working set. Week 1 scripted toy. No LLM."""
+"""Tiny linear PGG + working set. T1 scripted toy. No LLM."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import random
 Y = 1.0
 R = 1.6
 N = 4
-ISOLATION = 0.8  # below typical contributor in the n=4 all-C example (1.6)
+ISOLATION = 0.8
 
 
 class ScriptedPGG:
@@ -18,7 +18,7 @@ class ScriptedPGG:
         self.isolation = isolation
         self.rng = random.Random(seed)
         self.ids = list(range(n))
-        self.working = set(self.ids)  # start all in
+        self.working = set(self.ids)
         self.last_c = {i: None for i in self.ids}
         self.t = 0
 
@@ -39,3 +39,18 @@ class ScriptedPGG:
             else:
                 out[i] = self.isolation
         return out
+
+    def form_groups(self, noms: dict[int, set[int]]) -> set[int]:
+        """Bilateral form: i and j co-work iff each nominated the other.
+
+        Solo (i nominated i) is allowed. One-sided nominate is not a pair.
+        """
+        nxt = set()
+        for i in self.ids:
+            for j in noms.get(i, set()):
+                if i == j:
+                    nxt.add(i)
+                elif i in noms.get(j, set()):
+                    nxt.add(i)
+                    nxt.add(j)
+        return nxt
