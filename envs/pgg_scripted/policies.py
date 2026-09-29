@@ -20,4 +20,16 @@ def include_next(
       include self (you can always volunteer).
     Never invent a reputation number.
     """
-    raise NotImplementedError("Week 1 crux: fill include_next")
+    chosen = set()
+    chosen.add(i)
+    if mode == "positive":
+        for j, c in visible_c.items():
+            if c is None or c >= threshold:
+                chosen.add(j)
+    elif mode == "null":
+        for j in visible_c:
+            if j != i and rng.random() < 0.5:
+                chosen.add(j)
+    else:
+        raise ValueError(mode)
+    return chosen
