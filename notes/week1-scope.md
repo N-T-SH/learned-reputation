@@ -1,5 +1,5 @@
 # Tranche 1 scope — scripted PGG pipeline
-**Updated:** 2026-09-29 (after Lab lock)  
+**Updated:** 2026-09-29 (after Lab lock; ReputationLearning coordination pass)  
 **Repo:** `N-T-SH/learned-reputation` (not `resilient-lab`)  
 **Pacing:** calendar “weeks” in the 2-month plan map to **tranches**. A tranche is 2–3h AI+human blocks. Advance when the gate is green; do not wait out a calendar week.
 
@@ -43,3 +43,33 @@ Smallest runnable loop that proves the measurement pipeline **before any LLM sea
 | T1-b | confirm `form_groups` | mutual → together; one-sided → not |
 | T1-c | inclusion ~ last c | β positive on script; ~0 on null |
 | T1-d (if time) | schema + messages + token count | malformed logged |
+
+## Coordination (ReputationLearning)
+
+**Owners**
+- **This bot (ReputationLearning):** `notes/` only — tranche scopes, locks, gates, handoffs. Always `git pull` before edit; sign; push.
+- **Implementation bot:** `envs/`, `runs/`, README run paths. Does not reopen locks in §Locked / `notes/locked-controls.md`.
+
+**Block order (do not skip the gate)**
+1. **T1-a** — implement `include_next` (positive + null); emit JSONL under `runs/pgg/`.
+2. **T1-b** — confirm working-set rule matches lock (mutual nominate → together; one-sided → not). Treat as verify against env, not a redesign.
+3. **T1-c** — inclusion ~ last visible `c` regression: β recoverable on positive; ~0 on null. **This is the T1 gate.**
+4. **T1-d** — only if T1-c is green *or* leftover block time after a–c; schema `{message, nominate, contribute}` + dry token count. Malformed → logged, not silent.
+
+**Artifacts that prove the gate (paths)**
+- `runs/pgg/positive_seed0.jsonl` and `runs/pgg/null_seed0.jsonl` (or agreed seed set)
+- Short regression summary (β₁/β₂ or agreed coefficients + null check) pointed from a future `notes/t1-gate.md` when green — do not invent numbers here.
+
+**Advance rule**
+- Exit criteria checkboxes above all green → open **T2** scope note (frozen seat + train pilot). Do not start LLM seats inside T1.
+- Calendar week labels in the old 2-month plan are informational only; **advance on gate**, not on Sunday.
+
+**Carry-forward (non-blocking)**
+- Local vLLM serve remains a known blocker (no GPU). Dry token accounting in T1-d is enough; real serve is not a T1 exit item.
+
+**Out of T1 (do not pull in)**
+- GRPO training runs, N=16 as default, reintegration, tabular Ueshima recreate as product, RepuNet scalar / gossip / score-coupled connect, the word REPUTATION in prompts.
+
+---
+**Signed:** ReputationLearning — updated 2026-09-29 ~18:40 IST (planning pass after Nitesh Lab lock + pull).
+
