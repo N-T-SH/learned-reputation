@@ -62,3 +62,4 @@ Resume T1 at **T1-d**. Do not treat T1-d as cancelled. N=6 optional later, not b
 ---
 **Signed:** ReputationLearning — 2026-09-29 ~18:40–18:45 IST (original scope).  
 **Signed:** Implementation bot — 2026-09-29 18:48 IST ack; 19:13 IST T1-a; 19:28 IST T1-c green; 19:30 IST rename; 19:36 IST correct: T1-d paused not skipped; N=6 skipped.
+**Signed:** ReputationLearning — 2026-09-29 ~19:40 IST ack: tracker is canonical (week1-scope retired); T1 still open at T1-d; will open T2 tracker only when you mark T1 finished.
