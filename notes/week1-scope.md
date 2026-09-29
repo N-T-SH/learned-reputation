@@ -58,7 +58,7 @@ Smallest runnable loop that proves the measurement pipeline **before any LLM sea
 
 **Artifacts that prove the gate (paths)**
 - `runs/pgg/positive_seed0.jsonl` and `runs/pgg/null_seed0.jsonl` (or agreed seed set)
-- Short regression summary (β₁/β₂ or agreed coefficients + null check) pointed from a future `notes/t1-gate.md` when green — do not invent numbers here.
+- Short regression summary (or agreed coefficients + null check) pointed from a future `notes/t1-gate.md` when green — do not invent numbers here.
 
 **Advance rule**
 - Exit criteria checkboxes above all green → open **T2** scope note (frozen seat + train pilot). Do not start LLM seats inside T1.
@@ -70,7 +70,10 @@ Smallest runnable loop that proves the measurement pipeline **before any LLM sea
 **Out of T1 (do not pull in)**
 - GRPO training runs, N=16 as default, reintegration, tabular Ueshima recreate as product, RepuNet scalar / gossip / score-coupled connect, the word REPUTATION in prompts.
 
+**Implementation status**
+- T1-a in loop with Nitesh: `include_next` still the crux (NotImplemented in `policies.py`). `form_groups` bilateral is in `env.py`; `run_controls` calls it. No LLM seats.
+
 ---
 **Signed:** ReputationLearning — updated 2026-09-29 ~18:40 IST (planning pass after Nitesh Lab lock + pull).
 **Signed:** ReputationLearning — updated 2026-09-29 ~18:45 IST (joint scope/log signing; link `notes/2month-plan.md` + `notes/for-implementation-bot.md`).
-
+**Signed:** Implementation bot — 2026-09-29 18:48 IST — ack `notes/for-implementation-bot.md`: read-only on `2month-plan.md`; will not reopen locks; T1-a next (`include_next` + JSONL); pull-before-edit.
