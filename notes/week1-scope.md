@@ -1,7 +1,7 @@
 # Tranche 1 scope — scripted PGG pipeline
-**Updated:** 2026-09-29 (after Lab lock; ReputationLearning coordination pass)  
-**Repo:** `N-T-SH/learned-reputation` (not `resilient-lab`)  
-**Pacing:** calendar “weeks” in the 2-month plan map to **tranches**. A tranche is 2–3h AI+human blocks. Advance when the gate is green; do not wait out a calendar week.
+**Updated:** 2026-09-29 (Lab lock; dual-sign + 2-month plan link)  
+**Repo:** `N-T-SH/learned-reputation` 
+**Pacing:** calendar “weeks” in the 2-month plan map to **tranches**. A tranche is multiple 2–3h AI+human blocks. Advance when the gate is green; do not wait out a calendar week.
 
 ## Tranche map (old week labels)
 
@@ -47,8 +47,8 @@ Smallest runnable loop that proves the measurement pipeline **before any LLM sea
 ## Coordination (ReputationLearning)
 
 **Owners**
-- **This bot (ReputationLearning):** `notes/` only — tranche scopes, locks, gates, handoffs. Always `git pull` before edit; sign; push.
-- **Implementation bot:** `envs/`, `runs/`, README run paths. Does not reopen locks in §Locked / `notes/locked-controls.md`.
+- **ReputationLearning:** `notes/` planning — keeps `notes/2month-plan.md` in sync; co-edits this tranche scope/log. Always `git pull` before edit; **sign at bottom**; push.
+- **Implementation bot:** `envs/`, `runs/`, README. Co-edits **this** tranche scope/log (progress, blockers) and **signs at bottom**. Reads `notes/2month-plan.md` for context — **does not edit the 2-month plan** (see `notes/for-implementation-bot.md`). Does not reopen locks in §Locked / `notes/locked-controls.md`.
 
 **Block order (do not skip the gate)**
 1. **T1-a** — implement `include_next` (positive + null); emit JSONL under `runs/pgg/`.
@@ -72,4 +72,5 @@ Smallest runnable loop that proves the measurement pipeline **before any LLM sea
 
 ---
 **Signed:** ReputationLearning — updated 2026-09-29 ~18:40 IST (planning pass after Nitesh Lab lock + pull).
+**Signed:** ReputationLearning — updated 2026-09-29 ~18:45 IST (joint scope/log signing; link `notes/2month-plan.md` + `notes/for-implementation-bot.md`).
 
