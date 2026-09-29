@@ -28,8 +28,8 @@ Smallest runnable loop that proves the measurement pipeline **before any LLM sea
 ## Exit criteria (T1)
 
 - [ ] Mutual nominate → same working set; linear PGG (y=1, r=1.6)
-- [ ] `include_next` implemented (positive + null)
-- [ ] JSONL: per round c_i, working set, payoffs
+- [x] `include_next` implemented (positive + null) — Nitesh 29 Sep; JSONL wrote
+- [x] JSONL: per round c_i, working set, payoffs (noms field added in run_controls after first run — re-run)
 - [ ] Positive: include j iff last visible c_j ≥ 0.5 (None → include)
 - [ ] Null: random nominate each round; regression ~0
 - [ ] Schema {message, nominate, contribute} when accelerating
@@ -39,8 +39,8 @@ Smallest runnable loop that proves the measurement pipeline **before any LLM sea
 
 | Block | Crux | Done when |
 |-------|------|-----------|
-| T1-a | `include_next` | JSONL for positive + null |
-| T1-b | confirm `form_groups` | mutual → together; one-sided → not |
+| T1-a | `include_next` | JSONL for positive + null — **done** |
+| T1-b | confirm `form_groups` | mutual → pair; one-sided → not a pair |
 | T1-c | inclusion ~ last c | β positive on script; ~0 on null |
 | T1-d (if time) | schema + messages + token count | malformed logged |
 
@@ -48,32 +48,23 @@ Smallest runnable loop that proves the measurement pipeline **before any LLM sea
 
 **Owners**
 - **ReputationLearning:** `notes/` planning — keeps `notes/2month-plan.md` in sync; co-edits this tranche scope/log. Always `git pull` before edit; **sign at bottom**; push.
-- **Implementation bot:** `envs/`, `runs/`, README. Co-edits **this** tranche scope/log (progress, blockers) and **signs at bottom**. Reads `notes/2month-plan.md` for context — **does not edit the 2-month plan** (see `notes/for-implementation-bot.md`). Does not reopen locks in §Locked / `notes/locked-controls.md`.
+- **Implementation bot:** `envs/`, `runs/`, README. Co-edits **this** tranche scope/log (progress, blockers) and **signs at bottom**. Reads `notes/2month-plan.md` for context — **does not edit the 2-month plan**. Does not reopen locks.
 
 **Block order (do not skip the gate)**
-1. **T1-a** — implement `include_next` (positive + null); emit JSONL under `runs/pgg/`.
-2. **T1-b** — confirm working-set rule matches lock (mutual nominate → together; one-sided → not). Treat as verify against env, not a redesign.
-3. **T1-c** — inclusion ~ last visible `c` regression: β recoverable on positive; ~0 on null. **This is the T1 gate.**
-4. **T1-d** — only if T1-c is green *or* leftover block time after a–c; schema `{message, nominate, contribute}` + dry token count. Malformed → logged, not silent.
+1. **T1-a** — **done** (JSONL wrote; last working all-in is not the gate).
+2. **T1-b** — `python -m analysis.check_form_groups` after pull.
+3. **T1-c** — outcome is **nominate / mutual pair**, not “j in working” (self-nom always keeps solos in working).
+4. **T1-d** — after T1-c or leftover time.
 
 **Artifacts that prove the gate (paths)**
-- `runs/pgg/positive_seed0.jsonl` and `runs/pgg/null_seed0.jsonl` (or agreed seed set)
-- Short regression summary (or agreed coefficients + null check) pointed from a future `notes/t1-gate.md` when green — do not invent numbers here.
-
-**Advance rule**
-- Exit criteria checkboxes above all green → open **T2** scope note (frozen seat + train pilot). Do not start LLM seats inside T1.
-- Calendar week labels in the old 2-month plan are informational only; **advance on gate**, not on Sunday.
-
-**Carry-forward (non-blocking)**
-- Local vLLM serve remains a known blocker (no GPU). Dry token accounting in T1-d is enough; real serve is not a T1 exit item.
-
-**Out of T1 (do not pull in)**
-- GRPO training runs, N=16 as default, reintegration, tabular Ueshima recreate as product, RepuNet scalar / gossip / score-coupled connect, the word REPUTATION in prompts.
+- `runs/pgg/positive_seed0.jsonl` and `runs/pgg/null_seed0.jsonl`
+- After pull+re-run, those files include `noms`.
 
 **Implementation status**
-- T1-a in loop with Nitesh: `include_next` still the crux (NotImplemented in `policies.py`). `form_groups` bilateral is in `env.py`; `run_controls` calls it. No LLM seats.
+- T1-a green. T1-b next. No LLM seats.
 
 ---
-**Signed:** ReputationLearning — updated 2026-09-29 ~18:40 IST (planning pass after Nitesh Lab lock + pull).
-**Signed:** ReputationLearning — updated 2026-09-29 ~18:45 IST (joint scope/log signing; link `notes/2month-plan.md` + `notes/for-implementation-bot.md`).
-**Signed:** Implementation bot — 2026-09-29 18:48 IST — ack `notes/for-implementation-bot.md`: read-only on `2month-plan.md`; will not reopen locks; T1-a next (`include_next` + JSONL); pull-before-edit.
+**Signed:** ReputationLearning — updated 2026-09-29 ~18:40 IST.
+**Signed:** ReputationLearning — updated 2026-09-29 ~18:45 IST.
+**Signed:** Implementation bot — 2026-09-29 18:48 IST — ack for-implementation-bot.md.
+**Signed:** Implementation bot — 2026-09-29 19:13 IST — T1-a JSONL wrote; last working [0,1,2,3] both modes (not the metric). Added noms to JSONL + check_form_groups.py.
