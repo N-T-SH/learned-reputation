@@ -19,19 +19,17 @@ def run(mode: str, rounds: int = 30, seed: int = 0, out: str = ""):
     for t in range(rounds):
         contrib = {i: 1.0 if rng.random() > 0.4 else 0.0 for i in env.ids}
         pay = env.payoffs(contrib, env.working)
+        noms = {i: include_next(i, env.visible_c(i), mode, rng) for i in env.ids}
         rec = {
             "t": t,
             "mode": mode,
             "working": sorted(env.working),
-            "contrib": contrib,
-            "pay": pay,
+            "contrib": {str(k): v for k, v in contrib.items()},
+            "pay": {str(k): v for k, v in pay.items()},
+            "noms": {str(k): sorted(v) for k, v in noms.items()},
         }
         with path.open("a") as f:
             f.write(json.dumps(rec) + "\n")
-
-        noms = {}
-        for i in env.ids:
-            noms[i] = include_next(i, env.visible_c(i), mode, rng)
         nxt = env.form_groups(noms)
         if not nxt:
             nxt = {rng.choice(env.ids)}
