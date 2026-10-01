@@ -17,7 +17,10 @@ def parse_model_text(text: str):
     return the string itself so repair fails closed (empty action, ok False).
     Do not invent a nomination here.
     """
-    raise NotImplementedError("T2-a crux: fill parse_model_text")
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return text
 
 
 def prompt_for(seat: int, visible: dict, inbox: list[str]) -> str:
