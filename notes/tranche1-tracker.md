@@ -4,35 +4,33 @@
 **Pacing:** tranches, not calendar weeks.
 
 ## Status
-**T1-a, T1-b, T1-c GREEN.** T1-d almost closed (Thu 1 Oct).  
-Dry tokens written. Bad-action JSONL not confirmed in chat.  
-**N=6 skipped.** No LLM seats. T2 not opened.
+**T1-a through T1-d are done** (Thu 1 Oct). N=6 was skipped on purpose. No model seats yet. T2 is not opened; plan-bot opens that tracker only if Nitesh marks T1 finished.
 
 ## Locks
 
-1. Visibility: **local**
-2. Groups: **bilateral form / unilateral break**
-3. Units: **y=1**, threshold **0.5**, r=1.6, isolation 0.8
-4. N=4 gate. N=6 skipped.
-5. Schema repair: drop duplicate and out-of-range ids; whole action fails on non-dict, bad types, or c outside [0, 1]. Failure is empty message, empty noms, c=0, ok=False.
-6. Messages in the prompt are from the **previous** round.
+1. Visibility: local. A seat sees last working-set contributions and messages to them, not a global ledger.
+2. Groups: both must nominate each other. One-sided nominate does not make a pair.
+3. Units: endowment 1, include if last visible contribution is at least 0.5, multiplier 1.6, isolation payoff 0.8.
+4. Gate run used 4 seats. Six-seat rerun skipped.
+5. Bad model text becomes no message, no nominations, contribution 0, and a logged failure. A well-typed action can drop a duplicate or an illegal id and still count.
+6. Messages in the prompt are from the previous round.
 
 ## Log
 
 | Block | Result |
 |-------|--------|
-| T1-a/b/c | Green. Positive P(nom\|c≥0.5 / c<0.5)=1.0/0.0; null 0.526/0.408. |
-| T1-d repair | Smoke green. Illegal id dropped. Bad string → empty action. |
-| T1-d tokens | Example view 277 chars, ~69 tokens. N=4 × R=20 ≈ **5540** prompt tokens/episode (chars/4, no model). |
-| T1-d bad JSONL | Not confirmed. |
+| T1-a/b/c | Done. Scripted rule always nominates a high contributor and never a low one. Random nominations stay near a coin flip. |
+| T1-d repair | Good action kept nominations 0 and 1. A raw string failed closed. |
+| T1-d tokens | One seat view about 69 tokens. Four seats for 20 rounds about 5540 prompt tokens per episode. Rough chars/4 estimate, input only. |
+| T1-d bad row | `runs/pgg/schema_bad.jsonl`: raw string, ok false, empty message, empty nominations, contribution 0. |
 
 ## Exit criteria
 
-- [x] T1-a/b/c
-- [x] `repair` smoke
-- [ ] Bad action row in `runs/pgg/schema_bad.jsonl`
-- [x] Dry tokens/episode ≈ 5540 at N=4, R=20
-- [ ] N=6 — skipped
+- [x] Scripted measurement gate
+- [x] Repair smoke
+- [x] Bad action row logged
+- [x] Dry tokens/episode about 5540 at 4 seats, 20 rounds
+- [ ] Six-seat rerun — skipped
 
 ---
-**Signed:** Implementation bot — 2026-10-01 ~10:45 IST — dry token count logged; schema_bad.jsonl still unchecked.
+**Signed:** Implementation bot — 2026-10-01 ~10:50 IST — T1-d closed. Bad action file confirmed. T2 not opened.
