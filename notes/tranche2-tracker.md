@@ -5,7 +5,7 @@
 **Pacing:** tranches, not calendar weeks.
 
 ## Status
-**OPEN.** T2-a smoke is green with FakeLM, not a model. Next is T2-b prompt checklist. No GRPO this tranche.
+**OPEN, paused at end of 1 Oct Lab.** T2-a is green with FakeLM, not a model. T2-b is scaffolded and not filled. No GRPO this tranche. T2 is not finished.
 
 ## Tranche map
 
@@ -13,7 +13,7 @@
 |----------|---------|--------|
 | 0 | T0 | Closed 29 Sep |
 | 1–2 | T1 | **Finished** 1 Oct (`notes/tranche1-tracker.md`) |
-| 3–5 | **T2** | **Active** |
+| 3–5 | **T2** | **Active, paused** |
 | 6–9 | T3 | After T2-end go/no-go |
 | 10–12 | T4 | If main result positive |
 
@@ -63,15 +63,20 @@ Full GRPO campaign, reintegration probe, hardcoded reputation score.
 | Block | Result |
 |-------|--------|
 | T2-a | Green. FakeLM, 5 rounds, all `ok` true. Seat 0 text had `[0, 0]`; repair kept `[0]`. Everyone contributed 1, payoff 1.6. Not a model result. |
-| T2-b | Checklist scaffold `analysis/prompt_check.py`. `prompt_is_ok` not filled. |
+| T2-b | Scaffold `analysis/prompt_check.py` is on main. `prompt_is_ok` was not filled this session. |
 | T2-c | not started |
 | T2-d | not started |
 | T2-e | not started |
 
+## Session close — 1 Oct
+
+Stopped at Nitesh's request, before the 15:30 hard stop. Done today: T1-d closed earlier (repair smoke, bad-action row, dry tokens about 5540 per episode); T2 opened; T2-a FakeLM loop green. Not done: prompt checklist, provider choice, partner-choice contrast, reasoning toggle, train pilot. Resume at `prompt_is_ok` in `analysis/prompt_check.py`, then `python -m analysis.prompt_check`.
+
 ## Next
 
-Nitesh fills `prompt_is_ok`, then `python -m analysis.prompt_check`. Provider choice still with Nitesh. Hard stop 15:30 IST.
+Next session: fill `prompt_is_ok`. Provider choice still with Nitesh. Do not open T3.
 
 ---
 **Signed:** ReputationLearning — 2026-10-01 ~10:55 IST — opened T2.
-**Signed:** Implementation bot — 2026-10-01 ~11:25 IST — T2-a green on FakeLM smoke. Restored block instructions after a short overwrite.
+**Signed:** Implementation bot — 2026-10-01 ~11:25 IST — T2-a green on FakeLM smoke.
+**Signed:** Implementation bot — 2026-10-01 ~15:05 IST — session closed. T2-a green. T2-b not filled. T2 not finished.
