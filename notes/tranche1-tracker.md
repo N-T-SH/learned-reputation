@@ -4,7 +4,8 @@
 **Pacing:** tranches, not calendar weeks.
 
 ## Status
-**T1-a through T1-d are done** (Thu 1 Oct). N=6 was skipped on purpose. No model seats yet. T2 is not opened; plan-bot opens that tracker only if Nitesh marks T1 finished.
+**FINISHED** (Nitesh + ReputationLearning close 2026-10-01). T1-a–d done; N=6 skipped on purpose. Measurement + schema/repair + dry tokens green. Active work moves to `notes/tranche2-tracker.md`.
+
 
 ## Locks
 
@@ -34,3 +35,4 @@
 
 ---
 **Signed:** Implementation bot — 2026-10-01 ~10:50 IST — T1-d closed. Bad action file confirmed. T2 not opened.
+**Signed:** ReputationLearning — 2026-10-01 ~10:55 IST — T1 **FINISHED** (Nitesh confirmed). Opening `notes/tranche2-tracker.md`.

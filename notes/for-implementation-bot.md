@@ -1,31 +1,34 @@
 # For the implementation bot
 
 **Repo:** `N-T-SH/learned-reputation`  
-**Updated:** 2026-09-29
+**Updated:** 2026-10-01
 
 ## What you own
-- `envs/`, `runs/`, README run instructions, tests that prove gates.
-- In-loop with Nitesh on named cruxes (e.g. `include_next`).
+- `envs/`, `runs/`, README run instructions, `agents/` / `train/` as you add them, tests that prove gates.
+- In-loop with Nitesh on named cruxes and provider choice (API / FakeLM / vLLM).
 
 ## What you read (do not edit)
-- **`notes/2month-plan.md`** — tranche map, scientific targets, non-goals, calendar ceiling. **Read-only.** ReputationLearning alone updates and signs that file. If something in the plan conflicts with Lab reality, leave a signed note on the **active tranche tracker** (do not patch the 2-month plan yourself).
+- **`notes/2month-plan.md`** — **Read-only.** ReputationLearning alone updates it.
 - `notes/locked-controls.md` — do not reopen.
+- Closed trackers (e.g. `notes/tranche1-tracker.md`) — history only.
 
-## What you co-own (edit + sign)
-- Active tranche tracker: `notes/tranche{N}-tracker.md` (currently `notes/tranche1-tracker.md`). Pull first; update Status / Log / Exit criteria / blockers; **append a signed line at the bottom** (`Implementation bot — YYYY-MM-DD HH:MM IST — …`); push.
-- ReputationLearning does the same for coordination and plan sync.
+## Active work
+- **Now:** `notes/tranche2-tracker.md` — start at **T2-a**. Follow the “Instructions for implementation bot” section there (detailed).
+- Pull → code → update tracker Log/Exit criteria → **sign at bottom** → push.
 
 ## When a tranche is finished
-1. Mark the tracker **finished** in Status (and check exit criteria) with a clear signed line.
+1. Mark the tracker **FINISHED** in Status with a signed line.
 2. Do **not** invent the next tracker yourself.
-3. ReputationLearning will generate `notes/tranche{N+1}-tracker.md` in the **same format** and sync `notes/2month-plan.md`.
-4. Follow the new tracker once it lands on `main`.
+3. ReputationLearning generates `notes/tranche{N+1}-tracker.md` and syncs the 2-month plan.
 
 ## Standing rules
-1. Always `git pull --ff-only` before you edit notes or code that others may have touched.
-2. Do not start LLM seats until the active tranche allows it (see tracker Status + 2-month plan).
-3. Advance on gate / finished mark, not on calendar week labels.
+1. Always `git pull --ff-only` before you edit.
+2. All model output enters the env only through `schema.repair` (or its successor module).
+3. No REPUTATION / exclude-verb / game-theory jargon in prompts.
+4. Advance on finished marks, not calendar weeks.
+5. Hours / Lab calendar: Coach — do not invent hour totals.
 
 ---
 **Signed:** ReputationLearning — created 2026-09-29 ~18:45 IST.  
-**Signed:** ReputationLearning — updated 2026-09-29 ~19:40 IST (tracker rename; finish → next-tranche handoff).
+**Signed:** ReputationLearning — updated 2026-09-29 ~19:40 IST (tracker rename; finish → next-tranche handoff).  
+**Signed:** ReputationLearning — updated 2026-10-01 ~10:55 IST (T1 closed; T2 active).
