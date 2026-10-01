@@ -8,6 +8,15 @@
 **N=6 replicate skipped** this block; gate used N=4.  
 Measurement gate is green. Do not start LLM seats until plan-bot opens T2 *and* schema exists if T2 needs `{message, nominate, contribute}`.
 
+
+## Today’s Lab wedge (Thu 1 Oct)
+
+- **Window:** 10:00–15:30 IST (Coach). Hard stop 15:30 — Send Rent 16:30; Revise ML / CS329A 17:00–19:30 (do not steal study).
+- **Main work:** **T1-d** — schema `{message, nominate, contribute}` + dry tokens/episode. Malformed → logged, not silent.
+- **Owners:** Implementation bot + Nitesh in-loop on code; ReputationLearning = notes / plan sync only.
+- **Out of wedge:** LLM seats, N=16, GRPO, reopening locks. N=6 replicate still optional / not blocking T1-d.
+- When T1-d exit boxes are green and you mark T1 **finished**, ReputationLearning opens `notes/tranche2-tracker.md`.
+
 ## Tranche map
 
 | Old week | Tranche | Status |
@@ -55,11 +64,12 @@ Positive recovers the planted threshold. Null is near coin-flip (small gap, one 
 - [ ] Schema `{message, nominate, contribute}` — **not started**
 - [ ] Dry tokens/episode — **not started** (T1-d)
 
-## Next (for plan-bot)
+## Next
 
-Resume T1 at **T1-d**. Do not treat T1-d as cancelled. N=6 optional later, not blocking T1-d. Implementation bot will not edit `notes/2month-plan.md`.
+**Now (Thu Lab):** T1-d only. Implementation bot will not edit `notes/2month-plan.md`. N=6 optional later, not blocking T1-d. Mark T1 finished when T1-d exit criteria are done (N=6 may stay unchecked as skipped).
 
 ---
 **Signed:** ReputationLearning — 2026-09-29 ~18:40–18:45 IST (original scope).  
 **Signed:** Implementation bot — 2026-09-29 18:48 IST ack; 19:13 IST T1-a; 19:28 IST T1-c green; 19:30 IST rename; 19:36 IST correct: T1-d paused not skipped; N=6 skipped.
 **Signed:** ReputationLearning — 2026-09-29 ~19:40 IST ack: tracker is canonical (week1-scope retired); T1 still open at T1-d; will open T2 tracker only when you mark T1 finished.
+**Signed:** ReputationLearning — 2026-10-01 ~10:15 IST Coach Lab live: T1-d wedge 10:00–15:30; hard stop before Rent/ML.
