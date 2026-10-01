@@ -25,4 +25,20 @@ def repair(raw, n_seats: int) -> tuple[dict, bool]:
     - nominate is a list of ints in range(n_seats), duplicates dropped, order kept
     - contribute is int or float in [0, 1]
     """
-    raise NotImplementedError("T1-d crux: fill repair")
+    if not isinstance(raw, dict):
+        return (empty_action(), False)
+    if 'message' not in raw or not isinstance(raw['message'], str):
+        return (empty_action(), False)
+    if 'nominate' not in raw or not isinstance(raw['nominate'], list)\
+        or not all(isinstance(x, int) for x in raw['nominate']):
+        return (empty_action(), False)
+    if 'contribute' not in raw\
+        or not isinstance(raw['contribute'], (int, float))\
+        or not (0 <= raw['contribute'] <= 1)\
+        or isinstance(raw['contribute'], bool):
+        return (empty_action(), False)
+    raw['message'] = raw['message'][:MSG_CAP]
+    raw['nominate'] = [x for x in raw['nominate'] if x in range(n_seats)] 
+    raw['nominate'] = list(dict.fromkeys(raw['nominate']))
+    raw['contribute'] = raw['contribute']
+    return (raw, True)
