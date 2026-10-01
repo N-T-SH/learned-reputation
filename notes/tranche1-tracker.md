@@ -4,15 +4,9 @@
 **Pacing:** tranches, not calendar weeks.
 
 ## Status
-**T1-a, T1-b, T1-c GREEN.** T1-d in progress (Thu 1 Oct).  
-Schema smoke green. Dry tokens and bad-action JSONL still open.  
-**N=6 skipped.** No LLM seats.
-
-## Today’s Lab wedge (Thu 1 Oct)
-
-- **Window:** 10:00–15:30 IST. Hard stop 15:30.
-- **Main work:** T1-d schema + dry tokens.
-- **Out:** LLM seats, N=16, GRPO, reopening locks.
+**T1-a, T1-b, T1-c GREEN.** T1-d almost closed (Thu 1 Oct).  
+Dry tokens written. Bad-action JSONL not confirmed in chat.  
+**N=6 skipped.** No LLM seats. T2 not opened.
 
 ## Locks
 
@@ -27,24 +21,18 @@ Schema smoke green. Dry tokens and bad-action JSONL still open.
 
 | Block | Result |
 |-------|--------|
-| T1-a/b/c | Green (see rates below). |
-| T1-d repair | Smoke: good `ok=True` nominate `[0, 1]` (dropped dup and id 9). Bad string → empty action, `ok=False`. |
-| T1-d log + tokens | Not run yet. |
-
-### T1-c rates (seed 0, N=4)
-
-| file | n high / low c | P(nom \| c≥0.5) | P(nom \| c<0.5) |
-|------|----------------|-----------------|-----------------|
-| positive | 252 / 96 | **1.0** | **0.0** |
-| null | 228 / 120 | 0.526 | 0.408 |
+| T1-a/b/c | Green. Positive P(nom\|c≥0.5 / c<0.5)=1.0/0.0; null 0.526/0.408. |
+| T1-d repair | Smoke green. Illegal id dropped. Bad string → empty action. |
+| T1-d tokens | Example view 277 chars, ~69 tokens. N=4 × R=20 ≈ **5540** prompt tokens/episode (chars/4, no model). |
+| T1-d bad JSONL | Not confirmed. |
 
 ## Exit criteria
 
 - [x] T1-a/b/c
 - [x] `repair` smoke
 - [ ] Bad action row in `runs/pgg/schema_bad.jsonl`
-- [ ] Dry tokens/episode number
+- [x] Dry tokens/episode ≈ 5540 at N=4, R=20
 - [ ] N=6 — skipped
 
 ---
-**Signed:** Implementation bot — 2026-10-01 ~10:40 IST — repair smoke green; illegal id dropped not whole-fail; commit local schema.py before pull.
+**Signed:** Implementation bot — 2026-10-01 ~10:45 IST — dry token count logged; schema_bad.jsonl still unchecked.
