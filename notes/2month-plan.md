@@ -14,7 +14,7 @@
 | File | Who writes | Rule |
 |------|------------|------|
 | `notes/2month-plan.md` (this file) | **ReputationLearning only** | Pull → update from all available info → sign → push. Implementation bot has **read access only**. |
-| Active tranche scope/log (e.g. `notes/tranche1-tracker.md` / T1) | **Both** ReputationLearning and implementation bot | Each pulls before edit; appends substance; **signs at the bottom** with bot name + timestamp; pushes. Do not overwrite the other bot’s signed lines without a clear supersession note. |
+| Active tranche tracker (e.g. `notes/tranche2-tracker.md`) | **Both** ReputationLearning and implementation bot | Each pulls before edit; appends substance; **signs at the bottom** with bot name + timestamp; pushes. Do not overwrite the other bot’s signed lines without a clear supersession note. |
 | `notes/locked-controls.md` | Lab lock / ReputationLearning | Implementation bot reads; does not reopen locks. |
 | `envs/`, `runs/`, README run paths | Implementation bot | ReputationLearning does not code or scaffold. |
 
@@ -53,7 +53,6 @@ Coach owns calendar rematches. If Lab holds stay ~15h some weeks, the 30h design
 | 0 | **T0** | Reading, concepts, tooling warm-ups | **Closed** 29 Sep. vLLM local serve = carry-forward (no GPU), not a halt. |
 | 1–2 | T1 | Env, schema, scripted ±, regression, schema/repair, dry tokens | **Finished** 1 Oct. Tracker closed: `notes/tranche1-tracker.md`. |
 | 3–5 | **T2** | Frozen seats + train pilot; lock task | **Active.** `notes/tranche2-tracker.md`. End = funding/tech go/no-go. |
-
 | 6–9 | **T3** | Full GRPO (3 seeds, reasoning off) **if go**; message classifier + hand-check; main analysis | Else frozen-only / toy substitute. |
 | 10–12 | **T4** | Reintegration probe (if main result positive); write-up; buffer | Ship write-up |
 
