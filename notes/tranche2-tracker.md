@@ -4,7 +4,7 @@
 **Opened:** 2026-10-01
 
 ## Status
-**OPEN, run in progress.** Frozen loop is proven. A longer Qwen run is on Nitesh's machine: episode 0 of 10 finished, not yet pushed. Train pilot and gate note still open. Do not open T3. Pace note: `notes/for-plan-bot.md`. Plan synced (speed-run): `notes/2month-plan.md` — ReputationLearning 2 Oct.
+**OPEN.** Qwen longer frozen run is on `main` and finished. Seat 3 was left out in every episode. Train pilot and gate note still open. Do not open T3.
 
 ## Locks (do not reopen)
 
@@ -20,9 +20,10 @@
 - [x] FakeLM smoke
 - [x] OpenRouter smoke: Ling, 4 seats x 5 rounds, all replies ok
 - [x] Prompt checklist committed. Sample `ok True ok`.
-- [x] Partner-choice vs fixed-group logged. Working sets did not differ (null contrast).
+- [x] Partner-choice vs fixed-group logged. Ling working sets did not differ.
 - [x] Reasoning toggle skipped as a study aim. Comparison model must still accept reasoning off.
-- [ ] Longer frozen run logged (Qwen, 10x20, in progress)
+- [x] Longer frozen run logged. `runs/pgg/frozen_qwen_qwen3-8b_choice_seed0_n10.jsonl`
+- [ ] N=8 frozen run, same model, reasoning off
 - [ ] Training pilot, or a clear failure report
 - [ ] `notes/t2-gate.md` from real logs
 - [ ] Tracker marked FINISHED
@@ -40,19 +41,17 @@ Lab loop from 2 Oct: implementation bot writes the code, explains it, and asks a
 | T2-a | FakeLM smoke green. |
 | Router | `openrouter/free` returned `User Safety: safe`. Gemma free was upstream 429. |
 | T2-b | Checklist committed. Sample `ok True ok`. |
-| T2-c | Ling choice and fixed. Both kept all four seats. Seat 3 nominated nobody in fixed round 4 and stayed in. |
+| T2-c | Ling choice and fixed. Both kept all four seats. |
 | T2-d | Skipped. Not a study aim. |
-| Comparison model | `openai/gpt-oss-20b` rejected reasoning off: mandatory on that endpoint. Switched to `qwen/qwen3-8b` with `reasoning.enabled: false`. |
-| Longer run | In progress locally. 4 seats, 20 rounds, 10 episodes, partner choice, reasoning off. Episode 0 done as of 2 Oct ~06:20 EDT. Not on GitHub yet. Drops and 429s are retried; a saved seat reply is not called again. |
+| Comparison model | GPT-OSS rejected reasoning off. Qwen accepted `reasoning.enabled: false`. |
+| Longer run | 10 episodes, 20 rounds, 800 replies, all ok. Speaker `qwen/qwen3-8b`, groups choice, reasoning off. Working set was all four for 20 rows and `[0,1,2]` for 180. Seat 3 was out after round 1 in every episode. Isolation payoff 0.8. Insiders about 1.42. Contributions settled at 0.7. Not a training result. |
 | T2-e | Not started. No local GPU. OpenRouter cannot fine-tune. |
 
 ## Next
 
-Let the Qwen file finish, then push the JSONL. Do not change N on this file. Next frozen run is N=8, same model, reasoning off, before any training. **Go/no-go and any <$25 train pilot wait until after that frozen sequence** (see `notes/2month-plan.md` funding-artifacts subsection). Then `notes/t2-gate.md`. Do not open T3.
+N=8 frozen run, same model, reasoning off, partner choice. Then go/no-go. Do not open T3.
 
 ---
-**Signed:** Implementation bot — 2026-10-02 ~06:25 EDT — Qwen longer run in progress, episode 0 done, not pushed. N=8 is the next frozen setting, before training. T2 not finished.
-
+**Signed:** Implementation bot — 2026-10-02 ~06:40 EDT — Qwen 10x20 finished. Seat 3 excluded every episode. T2 not finished.
 **Signed:** ReputationLearning — 2026-10-02 ~15:58 IST — one-line pointer: 2month-plan speed-run synced; no exit-criteria edits.
-
-**Signed:** ReputationLearning — 2026-10-02 ~16:01 IST — pointer only: go/no-go + optional <$25 pilot after N=4 finish + N=8 frozen; artifacts menu in 2month-plan; no exit-criteria edits.
+**Signed:** ReputationLearning — 2026-10-02 ~16:01 IST — pointer only: go/no-go + optional <$25 pilot after N=4 finish + N=8 frozen.
