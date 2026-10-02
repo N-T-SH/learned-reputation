@@ -1,11 +1,13 @@
 """OpenRouter speaker. Returns text, never a dict.
 
-The key stays in the environment. A dropped connection is retried.
-A 400 is not retried: that is the model rejecting the request.
+Retries a dropped socket, a timeout, and a 429 or 5xx.
+Does not retry a 400. That is the model rejecting the request.
+RemoteDisconnected is not an OSError, so it is caught by name.
 """
 
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import time
@@ -14,6 +16,15 @@ import urllib.request
 
 BASE = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_MODEL = "openrouter/free"
+RETRYABLE = (
+    urllib.error.URLError,
+    TimeoutError,
+    ConnectionError,
+    OSError,
+    http.client.RemoteDisconnected,
+    http.client.IncompleteRead,
+    http.client.BadStatusLine,
+)
 
 
 def complete(seat: int, prompt: str, model: str | None = None, reasoning_off: bool = True) -> str:
@@ -40,7 +51,7 @@ def complete(seat: int, prompt: str, model: str | None = None, reasoning_off: bo
         body["reasoning"] = {"enabled": False}
     data = json.dumps(body).encode()
     last = "no attempt"
-    for attempt in range(4):
+    for attempt in range(5):
         req = urllib.request.Request(
             BASE,
             data=data,
@@ -56,14 +67,14 @@ def complete(seat: int, prompt: str, model: str | None = None, reasoning_off: bo
             return payload["choices"][0]["message"]["content"]
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode()[:300]
-            if exc.code in (429, 500, 502, 503, 504) and attempt < 3:
+            if exc.code in (408, 409, 429, 500, 502, 503, 504) and attempt < 4:
                 time.sleep(2 ** attempt)
                 last = f"HTTP {exc.code}: {detail}"
                 continue
             raise RuntimeError(f"OpenRouter HTTP {exc.code}: {detail}") from exc
-        except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as exc:
+        except RETRYABLE as exc:
             last = str(exc)
-            if attempt < 3:
+            if attempt < 4:
                 time.sleep(2 ** attempt)
                 continue
             raise RuntimeError(f"OpenRouter connection failed after retries: {last}") from exc

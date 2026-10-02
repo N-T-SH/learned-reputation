@@ -1,6 +1,7 @@
-"""Frozen smoke: prompt -> speaker text -> parse -> repair -> env step.
+"""Frozen smoke. A paid reply is saved before the next seat is called.
 
-A rerun of the same file continues after the last finished round.
+A rerun reuses finished rounds and any seat reply already on disk.
+A fenced or wrapped JSON is still used. That token was already paid for.
 """
 
 from __future__ import annotations
@@ -8,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 
 from agents.frozen.fake_lm import complete as fake_complete
@@ -17,9 +19,19 @@ from envs.pgg_scripted.schema import repair
 
 
 def parse_model_text(text: str):
+    raw = text.strip()
+    if raw.startswith("```"):
+        raw = re.sub(r"^```(?:json)?", "", raw).strip()
+        raw = re.sub(r"```$", "", raw).strip()
     try:
-        return json.loads(text)
+        return json.loads(raw)
     except json.JSONDecodeError:
+        start, end = raw.find("{"), raw.rfind("}")
+        if start >= 0 and end > start:
+            try:
+                return json.loads(raw[start : end + 1])
+            except json.JSONDecodeError:
+                return text
         return text
 
 
@@ -60,6 +72,19 @@ def load_rows(path: Path) -> list[dict]:
     return rows
 
 
+def load_seats(path: Path) -> dict[tuple[int, int, int], str]:
+    saved = {}
+    for row in load_rows(path):
+        saved[(int(row["episode"]), int(row["t"]), int(row["seat"]))] = row["text"]
+    return saved
+
+
+def save_seat(path: Path, episode: int, t: int, seat: int, text: str) -> None:
+    with path.open("a") as f:
+        f.write(json.dumps({"episode": episode, "t": t, "seat": seat, "text": text}) + "\n")
+        f.flush()
+
+
 def replay(env, rows: list[dict]) -> dict:
     inbox = {i: [] for i in env.ids}
     for row in rows:
@@ -92,8 +117,10 @@ def run(
     label, complete = speaker(speaker_name, model)
     slug = "fake" if label == "FakeLM" else label.split(":", 1)[-1].replace("/", "_")
     path = Path("runs/pgg") / f"frozen_{slug}_{groups}_seed{seed}_n{episodes}.jsonl"
+    seats_path = path.with_suffix(".seats.jsonl")
     path.parent.mkdir(parents=True, exist_ok=True)
     done = load_rows(path)
+    saved = load_seats(seats_path)
     by_ep: dict[int, list[dict]] = {}
     for row in done:
         by_ep.setdefault(int(row["episode"]), []).append(row)
@@ -108,7 +135,14 @@ def run(
         for t in range(len(have), rounds):
             texts, actions, oks = {}, {}, {}
             for i in env.ids:
-                text = complete(i, prompt_for(i, env.visible_c(i), inbox[i]))
+                key = (ep, t, i)
+                if key in saved:
+                    text = saved[key]
+                    print("reuse", "episode", ep, "t", t, "seat", i)
+                else:
+                    text = complete(i, prompt_for(i, env.visible_c(i), inbox[i]))
+                    save_seat(seats_path, ep, t, i, text)
+                    saved[key] = text
                 raw = parse_model_text(text)
                 action, ok = repair(raw, env.n)
                 texts[i], actions[i], oks[i] = text, action, ok
@@ -129,6 +163,7 @@ def run(
             }
             with path.open("a") as f:
                 f.write(json.dumps(row) + "\n")
+                f.flush()
             if groups == "fixed":
                 nxt = set(env.ids)
             else:
