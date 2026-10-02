@@ -2,6 +2,6 @@
 __pycache__/
 *.pyc
 .env
-runs/**/*.jsonl
-runs/**/*.csv
 .DS_Store
+# Gate logs in runs/pgg/ are committed. Ignore later train dumps.
+runs/train/
