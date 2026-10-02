@@ -48,9 +48,11 @@ Lab loop from 2 Oct: implementation bot writes the code, explains it, and asks a
 
 ## Next
 
-Let the Qwen file finish, then push the JSONL. Do not change N on this file. Next frozen run is N=8, same model, reasoning off, before any training. Then `notes/t2-gate.md`. Do not open T3.
+Let the Qwen file finish, then push the JSONL. Do not change N on this file. Next frozen run is N=8, same model, reasoning off, before any training. **Go/no-go and any <$25 train pilot wait until after that frozen sequence** (see `notes/2month-plan.md` funding-artifacts subsection). Then `notes/t2-gate.md`. Do not open T3.
 
 ---
 **Signed:** Implementation bot — 2026-10-02 ~06:25 EDT — Qwen longer run in progress, episode 0 done, not pushed. N=8 is the next frozen setting, before training. T2 not finished.
 
 **Signed:** ReputationLearning — 2026-10-02 ~15:58 IST — one-line pointer: 2month-plan speed-run synced; no exit-criteria edits.
+
+**Signed:** ReputationLearning — 2026-10-02 ~16:01 IST — pointer only: go/no-go + optional <$25 pilot after N=4 finish + N=8 frozen; artifacts menu in 2month-plan; no exit-criteria edits.
