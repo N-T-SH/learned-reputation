@@ -4,7 +4,7 @@
 **Opened:** 2026-10-01
 
 ## Status
-**OPEN.** Ling smoke and the choice/fixed contrast are logged. Working sets did not differ. No GRPO this tranche.
+**OPEN.** Frozen Ling loop and the choice/fixed contrast are logged. Reasoning toggle skipped by Nitesh on 2 Oct: not a study aim. Train pilot and gate note still open. No GRPO this tranche.
 
 ## Locks (do not reopen)
 
@@ -21,7 +21,7 @@
 - [x] OpenRouter smoke: Ling, 4 seats x 5 rounds, all replies ok
 - [ ] Prompt checklist committed
 - [x] Partner-choice vs fixed-group logged. Working sets did not differ (null contrast).
-- [ ] Reasoning on/off, or a signed blocker
+- [x] Reasoning on/off skipped. Not a study aim. Signed 2 Oct.
 - [ ] Training pilot, or a clear failure report
 - [ ] `notes/t2-gate.md` from real logs
 - [ ] Tracker marked FINISHED
@@ -30,9 +30,7 @@
 
 Do not edit `notes/2month-plan.md`.
 
-T2-d: reasoning on/off if the provider can toggle it. Otherwise sign a blocker. Do not block the pilot on it.
-
-T2-e: shared policy, reasoning off, about 200 episodes or fewer if the count is written down. Do not claim emergence.
+T2-e: shared policy, reasoning off, about 200 episodes or fewer if the count is written down. Do not claim emergence. No local GPU, so a hosted path or a written failure are both acceptable.
 
 Lab loop from 2 Oct: implementation bot writes the code, explains it, and asks a check question. Do not leave functions empty.
 
@@ -42,13 +40,14 @@ Lab loop from 2 Oct: implementation bot writes the code, explains it, and asks a
 |-------|--------|
 | T2-a | FakeLM smoke green. |
 | OpenRouter | `openrouter/free` returned safety stubs. Pinned Ling. Gemma free was upstream 429. |
-| T2-c choice | `frozen_inclusionai_ling-3.0-flash-sante:free_choice_seed0.jsonl`. All replies ok. Working stayed [0,1,2,3]. Everyone contributed 0.5. Pay 1.3. |
-| T2-c fixed | `frozen_inclusionai_ling-3.0-flash-sante:free_fixed_seed0.jsonl`. All replies ok. Working stayed [0,1,2,3] even when seat 3 nominated nobody in round 4. Contributions moved from 0.5 to 0.6. |
-| T2-d/e | not started |
+| T2-c choice | Working stayed [0,1,2,3]. Everyone contributed 0.5. Pay 1.3. |
+| T2-c fixed | Working stayed [0,1,2,3] even when seat 3 nominated nobody in round 4. Contributions moved from 0.5 to 0.6. |
+| T2-d | Skipped. Nitesh: not the main aim. |
+| T2-e | not started |
 
 ## Next
 
-T2-d: Ling has no reasoning toggle we can trust. Sign a blocker unless a second model id exposes one. Then the train pilot, or a written failure if there is no GPU and no train path.
+Train pilot, or a written failure if there is no train path. Then `notes/t2-gate.md` from these logs. Do not open T3.
 
 ---
-**Signed:** Implementation bot — 2026-10-02 ~14:50 IST — choice vs fixed logged. Contrast in working-set size is null because Ling nominated broadly.
+**Signed:** Implementation bot — 2026-10-02 ~14:55 IST — reasoning toggle skipped by Nitesh. T2 still open on the train pilot and the gate note.
