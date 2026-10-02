@@ -4,7 +4,7 @@
 **Opened:** 2026-10-01
 
 ## Status
-**OPEN.** T2-a FakeLM smoke is green. OpenRouter client is wired (`eb61d22`) and not yet run. Default model is `openrouter/free` until we pin an id. No GRPO this tranche.
+**OPEN.** Ling smoke and the choice/fixed contrast are logged. Working sets did not differ. No GRPO this tranche.
 
 ## Locks (do not reopen)
 
@@ -18,9 +18,9 @@
 ## Exit criteria
 
 - [x] FakeLM smoke
-- [ ] OpenRouter smoke JSONL
+- [x] OpenRouter smoke: Ling, 4 seats x 5 rounds, all replies ok
 - [ ] Prompt checklist committed
-- [ ] Partner-choice on vs fixed-group
+- [x] Partner-choice vs fixed-group logged. Working sets did not differ (null contrast).
 - [ ] Reasoning on/off, or a signed blocker
 - [ ] Training pilot, or a clear failure report
 - [ ] `notes/t2-gate.md` from real logs
@@ -29,10 +29,6 @@
 ## Instructions
 
 Do not edit `notes/2month-plan.md`.
-
-T2-b: prompt states what a seat can do. It does not teach the game. Checklist fails on forbidden words.
-
-T2-c: one run uses nominations. One run ignores them and uses a fixed working set.
 
 T2-d: reasoning on/off if the provider can toggle it. Otherwise sign a blocker. Do not block the pilot on it.
 
@@ -44,15 +40,15 @@ Lab loop from 2 Oct: implementation bot writes the code, explains it, and asks a
 
 | Block | Result |
 |-------|--------|
-| T2-a | Green. FakeLM, 5 rounds, all ok. Not a model result. |
-| T2-b | Chat printed `ok True` on 2 Oct. Confirm the function is committed. |
-| OpenRouter | Client on main. Key stays in `.env`. Model not pinned. |
-| T2-c..e | not started |
+| T2-a | FakeLM smoke green. |
+| OpenRouter | `openrouter/free` returned safety stubs. Pinned Ling. Gemma free was upstream 429. |
+| T2-c choice | `frozen_inclusionai_ling-3.0-flash-sante:free_choice_seed0.jsonl`. All replies ok. Working stayed [0,1,2,3]. Everyone contributed 0.5. Pay 1.3. |
+| T2-c fixed | `frozen_inclusionai_ling-3.0-flash-sante:free_fixed_seed0.jsonl`. All replies ok. Working stayed [0,1,2,3] even when seat 3 nominated nobody in round 4. Contributions moved from 0.5 to 0.6. |
+| T2-d/e | not started |
 
 ## Next
 
-Add $10 at https://openrouter.ai/settings/credits. Key in `.env`. Then `SPEAKER=openrouter python -m envs.pgg_scripted.run_frozen`. Pin `OPENROUTER_MODEL` after one smoke answers.
+T2-d: Ling has no reasoning toggle we can trust. Sign a blocker unless a second model id exposes one. Then the train pilot, or a written failure if there is no GPU and no train path.
 
 ---
-**Signed:** ReputationLearning — 2026-10-01 opened T2.
-**Signed:** Implementation bot — 2026-10-02 ~12:40 IST — OpenRouter speaker wired. FakeLM remains the default. Model unpinned. Restored block notes after a short overwrite.
+**Signed:** Implementation bot — 2026-10-02 ~14:50 IST — choice vs fixed logged. Contrast in working-set size is null because Ling nominated broadly.
