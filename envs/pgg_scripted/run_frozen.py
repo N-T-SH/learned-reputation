@@ -1,7 +1,7 @@
 """Frozen smoke. A paid reply is saved before the next seat is called.
 
 A rerun reuses finished rounds and any seat reply already on disk.
-A fenced or wrapped JSON is still used. That token was already paid for.
+Temperature and seat count are part of the file name, so a new setting does not resume an old log.
 """
 
 from __future__ import annotations
@@ -50,14 +50,16 @@ def prompt_for(seat: int, visible: dict, inbox: list[str]) -> str:
     return "\n".join(lines)
 
 
-def speaker(name: str | None = None, model: str | None = None):
+def speaker(name: str | None, model: str | None, temperature: float):
     chosen = (name or os.environ.get("SPEAKER") or "fake").strip().lower()
     pinned = (model or os.environ.get("OPENROUTER_MODEL") or "openrouter/free").strip()
     if chosen == "fake":
         return "FakeLM", fake_complete
     if chosen == "openrouter":
         def call(seat: int, prompt: str) -> str:
-            return openrouter_complete(seat, prompt, model=pinned, reasoning_off=True)
+            return openrouter_complete(
+                seat, prompt, model=pinned, reasoning_off=True, temperature=temperature
+            )
         return f"OpenRouter:{pinned}", call
     raise ValueError(f"unknown speaker={chosen}")
 
@@ -65,11 +67,7 @@ def speaker(name: str | None = None, model: str | None = None):
 def load_rows(path: Path) -> list[dict]:
     if not path.exists():
         return []
-    rows = []
-    for line in path.read_text().splitlines():
-        if line.strip():
-            rows.append(json.loads(line))
-    return rows
+    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
 def load_seats(path: Path) -> dict[tuple[int, int, int], str]:
@@ -91,10 +89,7 @@ def replay(env, rows: list[dict]) -> dict:
         actions = {int(k): v for k, v in row["action"].items()}
         contrib = {i: actions[i]["contribute"] for i in env.ids}
         noms = {i: set(actions[i]["nominate"]) for i in env.ids}
-        if row.get("groups") == "fixed":
-            nxt = set(env.ids)
-        else:
-            nxt = env.form_groups(noms) or {env.rng.choice(env.ids)}
+        nxt = set(env.ids) if row.get("groups") == "fixed" else (env.form_groups(noms) or {env.rng.choice(env.ids)})
         env.last_c = contrib
         env.working = nxt
         inbox = {i: [] for i in env.ids}
@@ -113,10 +108,12 @@ def run(
     model: str | None = None,
     groups: str = "choice",
     episodes: int = 1,
+    seats: int = 4,
+    temperature: float = 0.0,
 ) -> Path:
-    label, complete = speaker(speaker_name, model)
+    label, complete = speaker(speaker_name, model, temperature)
     slug = "fake" if label == "FakeLM" else label.split(":", 1)[-1].replace("/", "_")
-    path = Path("runs/pgg") / f"frozen_{slug}_{groups}_seed{seed}_n{episodes}.jsonl"
+    path = Path("runs/pgg") / f"frozen_{slug}_{groups}_s{seats}_t{temperature}_seed{seed}_n{episodes}.jsonl"
     seats_path = path.with_suffix(".seats.jsonl")
     path.parent.mkdir(parents=True, exist_ok=True)
     done = load_rows(path)
@@ -130,7 +127,7 @@ def run(
         if len(have) >= rounds:
             print("episode", ep, "already done")
             continue
-        env = ScriptedPGG(n=4, seed=seed + ep)
+        env = ScriptedPGG(n=seats, seed=seed + ep)
         inbox = replay(env, have)
         for t in range(len(have), rounds):
             texts, actions, oks = {}, {}, {}
@@ -143,8 +140,7 @@ def run(
                     text = complete(i, prompt_for(i, env.visible_c(i), inbox[i]))
                     save_seat(seats_path, ep, t, i, text)
                     saved[key] = text
-                raw = parse_model_text(text)
-                action, ok = repair(raw, env.n)
+                action, ok = repair(parse_model_text(text), env.n)
                 texts[i], actions[i], oks[i] = text, action, ok
             contrib = {i: actions[i]["contribute"] for i in env.ids}
             pay = env.payoffs(contrib, env.working)
@@ -154,6 +150,8 @@ def run(
                 "t": t,
                 "speaker": label,
                 "reasoning": "off",
+                "temperature": temperature,
+                "seats": seats,
                 "groups": groups,
                 "working": sorted(env.working),
                 "ok": {str(i): oks[i] for i in env.ids},
@@ -164,10 +162,7 @@ def run(
             with path.open("a") as f:
                 f.write(json.dumps(row) + "\n")
                 f.flush()
-            if groups == "fixed":
-                nxt = set(env.ids)
-            else:
-                nxt = env.form_groups(noms) or {env.rng.choice(env.ids)}
+            nxt = set(env.ids) if groups == "fixed" else (env.form_groups(noms) or {env.rng.choice(env.ids)})
             env.last_c = contrib
             env.working = nxt
             inbox = {i: [] for i in env.ids}
@@ -177,7 +172,7 @@ def run(
                         if dest != sender:
                             inbox[dest].append(action["message"])
         print("episode", ep, "done")
-    print("wrote", path, "speaker=" + label, "groups=" + groups, "reasoning=off")
+    print("wrote", path, "speaker=" + label, "groups=" + groups, "reasoning=off", "temperature=" + str(temperature))
     return path
 
 
@@ -188,6 +183,8 @@ def main() -> None:
     parser.add_argument("--groups", choices=["choice", "fixed"], default="choice")
     parser.add_argument("--rounds", type=int, default=5)
     parser.add_argument("--episodes", type=int, default=1)
+    parser.add_argument("--seats", type=int, default=4)
+    parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
     run(
@@ -197,6 +194,8 @@ def main() -> None:
         model=args.model,
         groups=args.groups,
         episodes=args.episodes,
+        seats=args.seats,
+        temperature=args.temperature,
     )
 
 
