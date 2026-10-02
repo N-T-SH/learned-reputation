@@ -2,6 +2,7 @@
 
 A 429 waits and tries again. That request was refused, so it is not a paid reply.
 A 400 is not retried. A dropped socket is retried on a short wait.
+Temperature is passed in. Zero repeats one path. A later trained run must use the same value.
 """
 
 from __future__ import annotations
@@ -26,14 +27,20 @@ RETRYABLE = (
 )
 
 
-def complete(seat: int, prompt: str, model: str | None = None, reasoning_off: bool = True) -> str:
+def complete(
+    seat: int,
+    prompt: str,
+    model: str | None = None,
+    reasoning_off: bool = True,
+    temperature: float = 0.0,
+) -> str:
     key = os.environ.get("OPENROUTER_API_KEY", "").strip()
     if not key:
         raise RuntimeError("OPENROUTER_API_KEY is not set. FakeLM is the no-key path.")
     chosen = (model or os.environ.get("OPENROUTER_MODEL") or DEFAULT_MODEL).strip()
     body = {
         "model": chosen,
-        "temperature": 0,
+        "temperature": temperature,
         "messages": [
             {
                 "role": "system",
