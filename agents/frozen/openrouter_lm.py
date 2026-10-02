@@ -1,16 +1,14 @@
 """OpenRouter speaker. Returns text, never a dict.
 
-The key stays in the environment. Model may be passed in; otherwise
-OPENROUTER_MODEL is the fallback.
-
-reasoning_off sends enabled false. gpt-oss-20b on OpenRouter rejects this
-(reasoning is mandatory there). Qwen accepts a disable. A reject still errors.
+The key stays in the environment. A dropped connection is retried.
+A 400 is not retried: that is the model rejecting the request.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import time
 import urllib.error
 import urllib.request
 
@@ -40,19 +38,33 @@ def complete(seat: int, prompt: str, model: str | None = None, reasoning_off: bo
     }
     if reasoning_off:
         body["reasoning"] = {"enabled": False}
-    req = urllib.request.Request(
-        BASE,
-        data=json.dumps(body).encode(),
-        headers={
-            "Authorization": f"Bearer {key}",
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=90) as resp:
-            payload = json.loads(resp.read().decode())
-    except urllib.error.HTTPError as exc:
-        detail = exc.read().decode()[:300]
-        raise RuntimeError(f"OpenRouter HTTP {exc.code}: {detail}") from exc
-    return payload["choices"][0]["message"]["content"]
+    data = json.dumps(body).encode()
+    last = "no attempt"
+    for attempt in range(4):
+        req = urllib.request.Request(
+            BASE,
+            data=data,
+            headers={
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=90) as resp:
+                payload = json.loads(resp.read().decode())
+            return payload["choices"][0]["message"]["content"]
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode()[:300]
+            if exc.code in (429, 500, 502, 503, 504) and attempt < 3:
+                time.sleep(2 ** attempt)
+                last = f"HTTP {exc.code}: {detail}"
+                continue
+            raise RuntimeError(f"OpenRouter HTTP {exc.code}: {detail}") from exc
+        except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as exc:
+            last = str(exc)
+            if attempt < 3:
+                time.sleep(2 ** attempt)
+                continue
+            raise RuntimeError(f"OpenRouter connection failed after retries: {last}") from exc
+    raise RuntimeError(f"OpenRouter connection failed after retries: {last}")

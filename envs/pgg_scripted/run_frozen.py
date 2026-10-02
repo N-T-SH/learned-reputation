@@ -1,8 +1,6 @@
 """Frozen smoke: prompt -> speaker text -> parse -> repair -> env step.
 
-Flags win. Environment is the fallback. The key is only read from the environment.
---groups choice uses nominations. --groups fixed ignores them and keeps every seat in.
-OpenRouter calls send reasoning effort none so a later trained run can match.
+A rerun of the same file continues after the last finished round.
 """
 
 from __future__ import annotations
@@ -52,6 +50,37 @@ def speaker(name: str | None = None, model: str | None = None):
     raise ValueError(f"unknown speaker={chosen}")
 
 
+def load_rows(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    rows = []
+    for line in path.read_text().splitlines():
+        if line.strip():
+            rows.append(json.loads(line))
+    return rows
+
+
+def replay(env, rows: list[dict]) -> dict:
+    inbox = {i: [] for i in env.ids}
+    for row in rows:
+        actions = {int(k): v for k, v in row["action"].items()}
+        contrib = {i: actions[i]["contribute"] for i in env.ids}
+        noms = {i: set(actions[i]["nominate"]) for i in env.ids}
+        if row.get("groups") == "fixed":
+            nxt = set(env.ids)
+        else:
+            nxt = env.form_groups(noms) or {env.rng.choice(env.ids)}
+        env.last_c = contrib
+        env.working = nxt
+        inbox = {i: [] for i in env.ids}
+        for sender, action in actions.items():
+            if action["message"]:
+                for dest in action["nominate"]:
+                    if dest != sender:
+                        inbox[dest].append(action["message"])
+    return inbox
+
+
 def run(
     rounds: int = 5,
     seed: int = 0,
@@ -64,12 +93,19 @@ def run(
     slug = "fake" if label == "FakeLM" else label.split(":", 1)[-1].replace("/", "_")
     path = Path("runs/pgg") / f"frozen_{slug}_{groups}_seed{seed}_n{episodes}.jsonl"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("")
+    done = load_rows(path)
+    by_ep: dict[int, list[dict]] = {}
+    for row in done:
+        by_ep.setdefault(int(row["episode"]), []).append(row)
 
     for ep in range(episodes):
+        have = by_ep.get(ep, [])
+        if len(have) >= rounds:
+            print("episode", ep, "already done")
+            continue
         env = ScriptedPGG(n=4, seed=seed + ep)
-        inbox = {i: [] for i in env.ids}
-        for t in range(rounds):
+        inbox = replay(env, have)
+        for t in range(len(have), rounds):
             texts, actions, oks = {}, {}, {}
             for i in env.ids:
                 text = complete(i, prompt_for(i, env.visible_c(i), inbox[i]))
