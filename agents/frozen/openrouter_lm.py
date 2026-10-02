@@ -3,8 +3,8 @@
 The key stays in the environment. Model may be passed in; otherwise
 OPENROUTER_MODEL is the fallback.
 
-reasoning_off sends effort none. That is the frozen setting a later
-trained run should match. A model that rejects it will error, not silently think.
+reasoning_off sends enabled false. gpt-oss-20b on OpenRouter rejects this
+(reasoning is mandatory there). Qwen accepts a disable. A reject still errors.
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ def complete(seat: int, prompt: str, model: str | None = None, reasoning_off: bo
         ],
     }
     if reasoning_off:
-        body["reasoning"] = {"effort": "none", "enabled": False}
+        body["reasoning"] = {"enabled": False}
     req = urllib.request.Request(
         BASE,
         data=json.dumps(body).encode(),
