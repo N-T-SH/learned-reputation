@@ -1,11 +1,11 @@
 """Frozen smoke: prompt -> speaker text -> parse -> repair -> env step.
 
-SPEAKER=fake uses the stand-in. SPEAKER=openrouter calls OpenRouter.
-The log records which one ran. A missing key does not fall back silently.
+Flags win. Environment is the fallback. The key is only read from the environment.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 from pathlib import Path
@@ -39,20 +39,23 @@ def prompt_for(seat: int, visible: dict, inbox: list[str]) -> str:
     return "\n".join(lines)
 
 
-def speaker():
-    name = os.environ.get("SPEAKER", "fake").strip().lower()
-    if name == "fake":
+def speaker(name: str | None = None, model: str | None = None):
+    chosen = (name or os.environ.get("SPEAKER") or "fake").strip().lower()
+    pinned = (model or os.environ.get("OPENROUTER_MODEL") or "openrouter/free").strip()
+    if chosen == "fake":
         return "FakeLM", fake_complete
-    if name == "openrouter":
-        model = os.environ.get("OPENROUTER_MODEL", "openrouter/free")
-        return f"OpenRouter:{model}", openrouter_complete
-    raise ValueError(f"unknown SPEAKER={name}")
+    if chosen == "openrouter":
+        def call(seat: int, prompt: str) -> str:
+            return openrouter_complete(seat, prompt, model=pinned)
+        return f"OpenRouter:{pinned}", call
+    raise ValueError(f"unknown speaker={chosen}")
 
 
-def run(rounds: int = 5, seed: int = 0) -> Path:
-    label, complete = speaker()
+def run(rounds: int = 5, seed: int = 0, speaker_name: str | None = None, model: str | None = None) -> Path:
+    label, complete = speaker(speaker_name, model)
     env = ScriptedPGG(n=4, seed=seed)
-    path = Path("runs/pgg") / ("frozen_smoke_seed0.jsonl" if label == "FakeLM" else "openrouter_smoke_seed0.jsonl")
+    slug = "fake" if label == "FakeLM" else label.split(":", 1)[-1].replace("/", "_")
+    path = Path("runs/pgg") / f"frozen_{slug}_seed{seed}.jsonl"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("")
     inbox = {i: [] for i in env.ids}
@@ -91,5 +94,15 @@ def run(rounds: int = 5, seed: int = 0) -> Path:
     return path
 
 
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Frozen PGG smoke. Flags override .env.")
+    parser.add_argument("--speaker", choices=["fake", "openrouter"], help="fallback: SPEAKER in .env, else fake")
+    parser.add_argument("--model", help="OpenRouter model id. Fallback: OPENROUTER_MODEL, else openrouter/free")
+    parser.add_argument("--rounds", type=int, default=5)
+    parser.add_argument("--seed", type=int, default=0)
+    args = parser.parse_args()
+    run(rounds=args.rounds, seed=args.seed, speaker_name=args.speaker, model=args.model)
+
+
 if __name__ == "__main__":
-    run()
+    main()

@@ -1,7 +1,7 @@
 """OpenRouter speaker. Returns text, never a dict.
 
-Key stays in the environment. This module does not read a key from chat.
-Default model is the free router so a smoke can run before we pin an id.
+The key stays in the environment. Model may be passed in; otherwise
+OPENROUTER_MODEL is the fallback.
 """
 
 from __future__ import annotations
@@ -15,13 +15,13 @@ BASE = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_MODEL = "openrouter/free"
 
 
-def complete(seat: int, prompt: str) -> str:
+def complete(seat: int, prompt: str, model: str | None = None) -> str:
     key = os.environ.get("OPENROUTER_API_KEY", "").strip()
     if not key:
         raise RuntimeError("OPENROUTER_API_KEY is not set. FakeLM is the no-key path.")
-    model = os.environ.get("OPENROUTER_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL
+    chosen = (model or os.environ.get("OPENROUTER_MODEL") or DEFAULT_MODEL).strip()
     body = {
-        "model": model,
+        "model": chosen,
         "temperature": 0,
         "messages": [
             {
