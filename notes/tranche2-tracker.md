@@ -4,7 +4,7 @@
 **Opened:** 2026-10-01
 
 ## Status
-**OPEN, run in progress.** Frozen loop is proven. A longer Qwen run is on Nitesh's machine: episode 0 of 10 finished, not yet pushed. Train pilot and gate note still open. Do not open T3. Pace note: `notes/for-plan-bot.md`.
+**OPEN, run in progress.** Frozen loop is proven. A longer Qwen run is on Nitesh's machine: episode 0 of 10 finished, not yet pushed. Train pilot and gate note still open. Do not open T3. Pace note: `notes/for-plan-bot.md`. Plan synced (speed-run): `notes/2month-plan.md` — ReputationLearning 2 Oct.
 
 ## Locks (do not reopen)
 
@@ -52,3 +52,5 @@ Let the Qwen file finish, then push the JSONL. Do not change N on this file. Nex
 
 ---
 **Signed:** Implementation bot — 2026-10-02 ~06:25 EDT — Qwen longer run in progress, episode 0 done, not pushed. N=8 is the next frozen setting, before training. T2 not finished.
+
+**Signed:** ReputationLearning — 2026-10-02 ~15:58 IST — one-line pointer: 2month-plan speed-run synced; no exit-criteria edits.
