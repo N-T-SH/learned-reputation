@@ -1,6 +1,7 @@
 """Frozen smoke: prompt -> speaker text -> parse -> repair -> env step.
 
 Flags win. Environment is the fallback. The key is only read from the environment.
+--groups choice uses nominations. --groups fixed ignores them and keeps every seat in.
 """
 
 from __future__ import annotations
@@ -51,11 +52,17 @@ def speaker(name: str | None = None, model: str | None = None):
     raise ValueError(f"unknown speaker={chosen}")
 
 
-def run(rounds: int = 5, seed: int = 0, speaker_name: str | None = None, model: str | None = None) -> Path:
+def run(
+    rounds: int = 5,
+    seed: int = 0,
+    speaker_name: str | None = None,
+    model: str | None = None,
+    groups: str = "choice",
+) -> Path:
     label, complete = speaker(speaker_name, model)
     env = ScriptedPGG(n=4, seed=seed)
     slug = "fake" if label == "FakeLM" else label.split(":", 1)[-1].replace("/", "_")
-    path = Path("runs/pgg") / f"frozen_{slug}_seed{seed}.jsonl"
+    path = Path("runs/pgg") / f"frozen_{slug}_{groups}_seed{seed}.jsonl"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("")
     inbox = {i: [] for i in env.ids}
@@ -73,6 +80,7 @@ def run(rounds: int = 5, seed: int = 0, speaker_name: str | None = None, model: 
         row = {
             "t": t,
             "speaker": label,
+            "groups": groups,
             "working": sorted(env.working),
             "ok": {str(i): oks[i] for i in env.ids},
             "action": {str(i): actions[i] for i in env.ids},
@@ -81,7 +89,10 @@ def run(rounds: int = 5, seed: int = 0, speaker_name: str | None = None, model: 
         }
         with path.open("a") as f:
             f.write(json.dumps(row) + "\n")
-        nxt = env.form_groups(noms) or {env.rng.choice(env.ids)}
+        if groups == "fixed":
+            nxt = set(env.ids)
+        else:
+            nxt = env.form_groups(noms) or {env.rng.choice(env.ids)}
         env.last_c = contrib
         env.working = nxt
         inbox = {i: [] for i in env.ids}
@@ -90,7 +101,7 @@ def run(rounds: int = 5, seed: int = 0, speaker_name: str | None = None, model: 
                 for dest in action["nominate"]:
                     if dest != sender:
                         inbox[dest].append(action["message"])
-    print("wrote", path, "speaker=" + label)
+    print("wrote", path, "speaker=" + label, "groups=" + groups)
     return path
 
 
@@ -98,10 +109,17 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Frozen PGG smoke. Flags override .env.")
     parser.add_argument("--speaker", choices=["fake", "openrouter"], help="fallback: SPEAKER in .env, else fake")
     parser.add_argument("--model", help="OpenRouter model id. Fallback: OPENROUTER_MODEL, else openrouter/free")
+    parser.add_argument("--groups", choices=["choice", "fixed"], default="choice")
     parser.add_argument("--rounds", type=int, default=5)
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
-    run(rounds=args.rounds, seed=args.seed, speaker_name=args.speaker, model=args.model)
+    run(
+        rounds=args.rounds,
+        seed=args.seed,
+        speaker_name=args.speaker,
+        model=args.model,
+        groups=args.groups,
+    )
 
 
 if __name__ == "__main__":
