@@ -1,8 +1,7 @@
 """OpenRouter speaker. Returns text, never a dict.
 
-Retries a dropped socket, a timeout, and a 429 or 5xx.
-Does not retry a 400. That is the model rejecting the request.
-RemoteDisconnected is not an OSError, so it is caught by name.
+A 429 waits and tries again. That request was refused, so it is not a paid reply.
+A 400 is not retried. A dropped socket is retried on a short wait.
 """
 
 from __future__ import annotations
@@ -51,7 +50,7 @@ def complete(seat: int, prompt: str, model: str | None = None, reasoning_off: bo
         body["reasoning"] = {"enabled": False}
     data = json.dumps(body).encode()
     last = "no attempt"
-    for attempt in range(5):
+    for attempt in range(8):
         req = urllib.request.Request(
             BASE,
             data=data,
@@ -67,15 +66,21 @@ def complete(seat: int, prompt: str, model: str | None = None, reasoning_off: bo
             return payload["choices"][0]["message"]["content"]
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode()[:300]
-            if exc.code in (408, 409, 429, 500, 502, 503, 504) and attempt < 4:
-                time.sleep(2 ** attempt)
+            if exc.code == 400:
+                raise RuntimeError(f"OpenRouter HTTP 400: {detail}") from exc
+            if exc.code in (408, 409, 429, 500, 502, 503, 504) and attempt < 7:
+                wait = 30 * (attempt + 1) if exc.code == 429 else 2 ** attempt
+                print(f"seat {seat} HTTP {exc.code}, waiting {wait}s", flush=True)
+                time.sleep(wait)
                 last = f"HTTP {exc.code}: {detail}"
                 continue
             raise RuntimeError(f"OpenRouter HTTP {exc.code}: {detail}") from exc
         except RETRYABLE as exc:
             last = str(exc)
-            if attempt < 4:
-                time.sleep(2 ** attempt)
+            if attempt < 7:
+                wait = 2 ** attempt
+                print(f"seat {seat} connection dropped, waiting {wait}s", flush=True)
+                time.sleep(wait)
                 continue
             raise RuntimeError(f"OpenRouter connection failed after retries: {last}") from exc
     raise RuntimeError(f"OpenRouter connection failed after retries: {last}")
