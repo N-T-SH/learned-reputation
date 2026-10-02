@@ -2,6 +2,9 @@
 
 The key stays in the environment. Model may be passed in; otherwise
 OPENROUTER_MODEL is the fallback.
+
+reasoning_off sends effort none. That is the frozen setting a later
+trained run should match. A model that rejects it will error, not silently think.
 """
 
 from __future__ import annotations
@@ -15,7 +18,7 @@ BASE = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_MODEL = "openrouter/free"
 
 
-def complete(seat: int, prompt: str, model: str | None = None) -> str:
+def complete(seat: int, prompt: str, model: str | None = None, reasoning_off: bool = True) -> str:
     key = os.environ.get("OPENROUTER_API_KEY", "").strip()
     if not key:
         raise RuntimeError("OPENROUTER_API_KEY is not set. FakeLM is the no-key path.")
@@ -35,6 +38,8 @@ def complete(seat: int, prompt: str, model: str | None = None) -> str:
             {"role": "user", "content": prompt},
         ],
     }
+    if reasoning_off:
+        body["reasoning"] = {"effort": "none", "enabled": False}
     req = urllib.request.Request(
         BASE,
         data=json.dumps(body).encode(),
@@ -45,7 +50,7 @@ def complete(seat: int, prompt: str, model: str | None = None) -> str:
         method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        with urllib.request.urlopen(req, timeout=90) as resp:
             payload = json.loads(resp.read().decode())
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode()[:300]
