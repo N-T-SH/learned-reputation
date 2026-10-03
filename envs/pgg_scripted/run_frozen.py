@@ -1,7 +1,7 @@
-"""Frozen smoke. A paid reply is saved before the next seat is called.
+"""Frozen run. Prompt shows a public ledger. Labels are shuffled per episode.
 
-Each round records when it finished and how many seconds it took.
-A rerun reuses finished rounds and any seat reply already on disk.
+Logs keep real seat ids. A lone or empty working set is isolation, not a pot.
+A paid reply is saved before the next seat is called.
 """
 
 from __future__ import annotations
@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import random
 import re
 import time
 from datetime import datetime, timezone
@@ -41,19 +42,47 @@ def parse_model_text(text: str):
         return text
 
 
-def prompt_for(seat: int, visible: dict, inbox: list[str]) -> str:
+def labels_for(n: int, seed: int) -> tuple[dict[int, int], dict[int, int]]:
+    order = list(range(n))
+    random.Random(seed).shuffle(order)
+    real_to_show = {real: show for show, real in enumerate(order)}
+    show_to_real = {show: real for real, show in real_to_show.items()}
+    return real_to_show, show_to_real
+
+
+def prompt_for(show_id: int, env: ScriptedPGG, real_to_show: dict[int, int], inbox: list[str]) -> str:
     lines = [
-        f"You are seat {seat}.",
+        f"You are seat {show_id}.",
         "You may send a short message, nominate partner ids, and set contribution between 0 and 1.",
         "Reply with a JSON object with keys message, nominate, contribute.",
-        "You see only your last working set.",
-        "Last visible contributions:",
+        "Recent rounds, newest last. c is contribution. nom is who that seat named.",
     ]
-    for j, c in visible.items():
-        lines.append(f"  seat {j}: c={c}")
+    if not env.history:
+        lines.append("  (no prior round)")
+    for round_i, item in enumerate(env.history, start=1):
+        lines.append(f"  round {round_i}")
+        for real in sorted(env.ids, key=lambda i: real_to_show[i]):
+            show = real_to_show[real]
+            named = [real_to_show[j] for j in item["nom"][real]]
+            lines.append(f"    seat {show}: c={item['c'][real]} nom={named}")
     lines.append("Messages from the previous round:")
     lines.extend(f"  {m}" for m in inbox) if inbox else lines.append("  (none)")
     return "\n".join(lines)
+
+
+def to_real(action: dict, show_to_real: dict[int, int]) -> dict:
+    return {
+        "message": action["message"],
+        "nominate": [show_to_real[j] for j in action["nominate"] if j in show_to_real],
+        "contribute": action["contribute"],
+    }
+
+
+def free_rider_action(env: ScriptedPGG, seat: int) -> dict:
+    last = env.history[-1]["c"] if env.history else {i: 0.0 for i in env.ids}
+    others = [i for i in env.ids if i != seat]
+    top = sorted(others, key=lambda i: last[i], reverse=True)[:2]
+    return {"message": "", "nominate": top, "contribute": 0.0}
 
 
 def speaker(name: str | None, model: str | None, temperature: float):
@@ -89,20 +118,21 @@ def save_seat(path: Path, episode: int, t: int, seat: int, text: str) -> None:
         f.flush()
 
 
-def replay(env, rows: list[dict]) -> dict:
+def replay(env: ScriptedPGG, rows: list[dict]) -> dict:
     inbox = {i: [] for i in env.ids}
     for row in rows:
         actions = {int(k): v for k, v in row["action"].items()}
         contrib = {i: actions[i]["contribute"] for i in env.ids}
         noms = {i: set(actions[i]["nominate"]) for i in env.ids}
-        nxt = set(env.ids) if row.get("groups") == "fixed" else (env.form_groups(noms) or {env.rng.choice(env.ids)})
+        env.record(contrib, noms)
+        nxt = set(env.ids) if row.get("groups") == "fixed" else env.form_groups(noms)
         env.last_c = contrib
         env.working = nxt
         inbox = {i: [] for i in env.ids}
         for sender, action in actions.items():
             if action["message"]:
                 for dest in action["nominate"]:
-                    if dest != sender:
+                    if dest != sender and dest in inbox:
                         inbox[dest].append(action["message"])
     return inbox
 
@@ -116,10 +146,12 @@ def run(
     episodes: int = 1,
     seats: int = 4,
     temperature: float = 0.0,
+    free_rider: bool = False,
 ) -> Path:
     label, complete = speaker(speaker_name, model, temperature)
     slug = "fake" if label == "FakeLM" else label.split(":", 1)[-1].replace("/", "_")
-    path = Path("runs/pgg") / f"frozen_{slug}_{groups}_s{seats}_t{temperature}_seed{seed}_n{episodes}.jsonl"
+    tag = "ledger" + ("_fr" if free_rider else "")
+    path = Path("runs/pgg") / f"frozen_{slug}_{groups}_s{seats}_t{temperature}_{tag}_seed{seed}_n{episodes}.jsonl"
     seats_path = path.with_suffix(".seats.jsonl")
     path.parent.mkdir(parents=True, exist_ok=True)
     done = load_rows(path)
@@ -129,6 +161,7 @@ def run(
         by_ep.setdefault(int(row["episode"]), []).append(row)
     run_started = time.time()
     print("started", stamp(), flush=True)
+    rider = seats - 1 if free_rider else None
 
     for ep in range(episodes):
         have = by_ep.get(ep, [])
@@ -136,22 +169,27 @@ def run(
             print("episode", ep, "already done")
             continue
         env = ScriptedPGG(n=seats, seed=seed + ep)
+        real_to_show, show_to_real = labels_for(seats, seed + ep)
         inbox = replay(env, have)
         ep_started = time.time()
         for t in range(len(have), rounds):
             round_started = time.time()
             texts, actions, oks = {}, {}, {}
             for i in env.ids:
+                if i == rider:
+                    actions[i] = free_rider_action(env, i)
+                    texts[i], oks[i] = "scripted free rider", True
+                    continue
                 key = (ep, t, i)
                 if key in saved:
                     text = saved[key]
                     print("reuse", "episode", ep, "t", t, "seat", i)
                 else:
-                    text = complete(i, prompt_for(i, env.visible_c(i), inbox[i]))
+                    text = complete(i, prompt_for(real_to_show[i], env, real_to_show, inbox[i]))
                     save_seat(seats_path, ep, t, i, text)
                     saved[key] = text
                 action, ok = repair(parse_model_text(text), env.n)
-                texts[i], actions[i], oks[i] = text, action, ok
+                texts[i], actions[i], oks[i] = text, to_real(action, show_to_real), ok
             contrib = {i: actions[i]["contribute"] for i in env.ids}
             pay = env.payoffs(contrib, env.working)
             noms = {i: set(actions[i]["nominate"]) for i in env.ids}
@@ -167,6 +205,8 @@ def run(
                 "temperature": temperature,
                 "seats": seats,
                 "groups": groups,
+                "ledger": True,
+                "label_map": {str(real): show for real, show in real_to_show.items()},
                 "working": sorted(env.working),
                 "ok": {str(i): oks[i] for i in env.ids},
                 "action": {str(i): actions[i] for i in env.ids},
@@ -176,14 +216,15 @@ def run(
             with path.open("a") as f:
                 f.write(json.dumps(row) + "\n")
                 f.flush()
-            nxt = set(env.ids) if groups == "fixed" else (env.form_groups(noms) or {env.rng.choice(env.ids)})
+            env.record(contrib, noms)
+            nxt = set(env.ids) if groups == "fixed" else env.form_groups(noms)
             env.last_c = contrib
             env.working = nxt
             inbox = {i: [] for i in env.ids}
             for sender, action in actions.items():
                 if action["message"]:
                     for dest in action["nominate"]:
-                        if dest != sender:
+                        if dest != sender and dest in inbox:
                             inbox[dest].append(action["message"])
         print("episode", ep, "done", "seconds", round(time.time() - ep_started, 1), flush=True)
     total = round(time.time() - run_started, 1)
@@ -204,6 +245,7 @@ def main() -> None:
     parser.add_argument("--seats", type=int, default=4)
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--free-rider", action="store_true")
     args = parser.parse_args()
     run(
         rounds=args.rounds,
@@ -214,6 +256,7 @@ def main() -> None:
         episodes=args.episodes,
         seats=args.seats,
         temperature=args.temperature,
+        free_rider=args.free_rider,
     )
 
 
