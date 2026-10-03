@@ -1,6 +1,6 @@
-"""Frozen run. Prompt shows a public ledger. Labels are shuffled per episode.
+"""Frozen run. Seat labels are random 6-digit ids, not 0..n-1.
 
-Logs keep real seat ids. A lone or empty working set is isolation, not a pot.
+The ledger is not sorted by that number. Logs keep real seat ids.
 A paid reply is saved before the next seat is called.
 """
 
@@ -42,15 +42,29 @@ def parse_model_text(text: str):
         return text
 
 
-def labels_for(n: int, seed: int) -> tuple[dict[int, int], dict[int, int]]:
+def labels_for(n: int, seed: int) -> tuple[dict[int, int], dict[int, int], list[int]]:
+    rng = random.Random(seed)
+    codes = set()
+    while len(codes) < n:
+        codes.add(rng.randint(100000, 999999))
+    codes = list(codes)
+    rng.shuffle(codes)
     order = list(range(n))
-    random.Random(seed).shuffle(order)
-    real_to_show = {real: show for show, real in enumerate(order)}
+    rng.shuffle(order)
+    real_to_show = {real: codes[i] for i, real in enumerate(order)}
     show_to_real = {show: real for real, show in real_to_show.items()}
-    return real_to_show, show_to_real
+    display_order = list(order)
+    rng.shuffle(display_order)
+    return real_to_show, show_to_real, display_order
 
 
-def prompt_for(show_id: int, env: ScriptedPGG, real_to_show: dict[int, int], inbox: list[str]) -> str:
+def prompt_for(
+    show_id: int,
+    env: ScriptedPGG,
+    real_to_show: dict[int, int],
+    display_order: list[int],
+    inbox: list[str],
+) -> str:
     lines = [
         f"You are seat {show_id}.",
         "You may send a short message, nominate partner ids, and set contribution between 0 and 1.",
@@ -61,7 +75,7 @@ def prompt_for(show_id: int, env: ScriptedPGG, real_to_show: dict[int, int], inb
         lines.append("  (no prior round)")
     for round_i, item in enumerate(env.history, start=1):
         lines.append(f"  round {round_i}")
-        for real in sorted(env.ids, key=lambda i: real_to_show[i]):
+        for real in display_order:
             show = real_to_show[real]
             named = [real_to_show[j] for j in item["nom"][real]]
             lines.append(f"    seat {show}: c={item['c'][real]} nom={named}")
@@ -70,12 +84,14 @@ def prompt_for(show_id: int, env: ScriptedPGG, real_to_show: dict[int, int], inb
     return "\n".join(lines)
 
 
-def to_real(action: dict, show_to_real: dict[int, int]) -> dict:
-    return {
-        "message": action["message"],
-        "nominate": [show_to_real[j] for j in action["nominate"] if j in show_to_real],
-        "contribute": action["contribute"],
-    }
+def to_real(raw, show_to_real: dict[int, int], n: int) -> tuple[dict, bool]:
+    if not isinstance(raw, dict):
+        return repair(raw, n)
+    copied = dict(raw)
+    noms = copied.get("nominate")
+    if isinstance(noms, list):
+        copied["nominate"] = [show_to_real[j] for j in noms if isinstance(j, int) and j in show_to_real]
+    return repair(copied, n)
 
 
 def free_rider_action(env: ScriptedPGG, seat: int) -> dict:
@@ -150,7 +166,7 @@ def run(
 ) -> Path:
     label, complete = speaker(speaker_name, model, temperature)
     slug = "fake" if label == "FakeLM" else label.split(":", 1)[-1].replace("/", "_")
-    tag = "ledger" + ("_fr" if free_rider else "")
+    tag = "ledger_id6" + ("_fr" if free_rider else "")
     path = Path("runs/pgg") / f"frozen_{slug}_{groups}_s{seats}_t{temperature}_{tag}_seed{seed}_n{episodes}.jsonl"
     seats_path = path.with_suffix(".seats.jsonl")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -169,7 +185,7 @@ def run(
             print("episode", ep, "already done")
             continue
         env = ScriptedPGG(n=seats, seed=seed + ep)
-        real_to_show, show_to_real = labels_for(seats, seed + ep)
+        real_to_show, show_to_real, display_order = labels_for(seats, seed + ep)
         inbox = replay(env, have)
         ep_started = time.time()
         for t in range(len(have), rounds):
@@ -183,13 +199,15 @@ def run(
                 key = (ep, t, i)
                 if key in saved:
                     text = saved[key]
-                    print("reuse", "episode", ep, "t", t, "seat", i)
                 else:
-                    text = complete(i, prompt_for(real_to_show[i], env, real_to_show, inbox[i]))
+                    text = complete(
+                        i,
+                        prompt_for(real_to_show[i], env, real_to_show, display_order, inbox[i]),
+                    )
                     save_seat(seats_path, ep, t, i, text)
                     saved[key] = text
-                action, ok = repair(parse_model_text(text), env.n)
-                texts[i], actions[i], oks[i] = text, to_real(action, show_to_real), ok
+                action, ok = to_real(parse_model_text(text), show_to_real, env.n)
+                texts[i], actions[i], oks[i] = text, action, ok
             contrib = {i: actions[i]["contribute"] for i in env.ids}
             pay = env.payoffs(contrib, env.working)
             noms = {i: set(actions[i]["nominate"]) for i in env.ids}
