@@ -1,6 +1,6 @@
-"""Frozen run. Seat labels are random 6-digit ids, not 0..n-1.
+"""Frozen run. The seat id in the prompt is the seat id in the log.
 
-The ledger is not sorted by that number. Logs keep real seat ids.
+Each episode draws a fresh 6-character id per seat. Repair accepts those ids.
 A paid reply is saved before the next seat is called.
 """
 
@@ -11,6 +11,7 @@ import json
 import os
 import random
 import re
+import string
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -19,6 +20,8 @@ from agents.frozen.fake_lm import complete as fake_complete
 from agents.frozen.openrouter_lm import complete as openrouter_complete
 from envs.pgg_scripted.env import ScriptedPGG
 from envs.pgg_scripted.schema import repair
+
+ALPHABET = string.ascii_lowercase + string.digits
 
 
 def stamp() -> str:
@@ -42,31 +45,19 @@ def parse_model_text(text: str):
         return text
 
 
-def labels_for(n: int, seed: int) -> tuple[dict[int, int], dict[int, int], list[int]]:
+def episode_ids(n: int, seed: int) -> list[str]:
     rng = random.Random(seed)
-    codes = set()
-    while len(codes) < n:
-        codes.add(rng.randint(100000, 999999))
-    codes = list(codes)
-    rng.shuffle(codes)
-    order = list(range(n))
-    rng.shuffle(order)
-    real_to_show = {real: codes[i] for i, real in enumerate(order)}
-    show_to_real = {show: real for real, show in real_to_show.items()}
-    display_order = list(order)
-    rng.shuffle(display_order)
-    return real_to_show, show_to_real, display_order
+    ids = set()
+    while len(ids) < n:
+        ids.add("".join(rng.choice(ALPHABET) for _ in range(6)))
+    ids = list(ids)
+    rng.shuffle(ids)
+    return ids
 
 
-def prompt_for(
-    show_id: int,
-    env: ScriptedPGG,
-    real_to_show: dict[int, int],
-    display_order: list[int],
-    inbox: list[str],
-) -> str:
+def prompt_for(seat: str, env: ScriptedPGG, order: list[str], inbox: list[str]) -> str:
     lines = [
-        f"You are seat {show_id}.",
+        f"You are seat {seat}.",
         "You may send a short message, nominate partner ids, and set contribution between 0 and 1.",
         "Reply with a JSON object with keys message, nominate, contribute.",
         "Recent rounds, newest last. c is contribution. nom is who that seat named.",
@@ -75,26 +66,14 @@ def prompt_for(
         lines.append("  (no prior round)")
     for round_i, item in enumerate(env.history, start=1):
         lines.append(f"  round {round_i}")
-        for real in display_order:
-            show = real_to_show[real]
-            named = [real_to_show[j] for j in item["nom"][real]]
-            lines.append(f"    seat {show}: c={item['c'][real]} nom={named}")
+        for sid in order:
+            lines.append(f"    seat {sid}: c={item['c'][sid]} nom={item['nom'][sid]}")
     lines.append("Messages from the previous round:")
     lines.extend(f"  {m}" for m in inbox) if inbox else lines.append("  (none)")
     return "\n".join(lines)
 
 
-def to_real(raw, show_to_real: dict[int, int], n: int) -> tuple[dict, bool]:
-    if not isinstance(raw, dict):
-        return repair(raw, n)
-    copied = dict(raw)
-    noms = copied.get("nominate")
-    if isinstance(noms, list):
-        copied["nominate"] = [show_to_real[j] for j in noms if isinstance(j, int) and j in show_to_real]
-    return repair(copied, n)
-
-
-def free_rider_action(env: ScriptedPGG, seat: int) -> dict:
+def free_rider_action(env: ScriptedPGG, seat: str) -> dict:
     last = env.history[-1]["c"] if env.history else {i: 0.0 for i in env.ids}
     others = [i for i in env.ids if i != seat]
     top = sorted(others, key=lambda i: last[i], reverse=True)[:2]
@@ -107,10 +86,8 @@ def speaker(name: str | None, model: str | None, temperature: float):
     if chosen == "fake":
         return "FakeLM", fake_complete
     if chosen == "openrouter":
-        def call(seat: int, prompt: str) -> str:
-            return openrouter_complete(
-                seat, prompt, model=pinned, reasoning_off=True, temperature=temperature
-            )
+        def call(seat: str, prompt: str) -> str:
+            return openrouter_complete(0, prompt, model=pinned, reasoning_off=True, temperature=temperature)
         return f"OpenRouter:{pinned}", call
     raise ValueError(f"unknown speaker={chosen}")
 
@@ -121,14 +98,14 @@ def load_rows(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
-def load_seats(path: Path) -> dict[tuple[int, int, int], str]:
+def load_seats(path: Path) -> dict[tuple[int, int, str], str]:
     saved = {}
     for row in load_rows(path):
-        saved[(int(row["episode"]), int(row["t"]), int(row["seat"]))] = row["text"]
+        saved[(int(row["episode"]), int(row["t"]), str(row["seat"]))] = row["text"]
     return saved
 
 
-def save_seat(path: Path, episode: int, t: int, seat: int, text: str) -> None:
+def save_seat(path: Path, episode: int, t: int, seat: str, text: str) -> None:
     with path.open("a") as f:
         f.write(json.dumps({"episode": episode, "t": t, "seat": seat, "text": text}) + "\n")
         f.flush()
@@ -137,9 +114,9 @@ def save_seat(path: Path, episode: int, t: int, seat: int, text: str) -> None:
 def replay(env: ScriptedPGG, rows: list[dict]) -> dict:
     inbox = {i: [] for i in env.ids}
     for row in rows:
-        actions = {int(k): v for k, v in row["action"].items()}
+        actions = row["action"]
         contrib = {i: actions[i]["contribute"] for i in env.ids}
-        noms = {i: set(actions[i]["nominate"]) for i in env.ids}
+        noms = {i: actions[i]["nominate"] for i in env.ids}
         env.record(contrib, noms)
         nxt = set(env.ids) if row.get("groups") == "fixed" else env.form_groups(noms)
         env.last_c = contrib
@@ -177,40 +154,39 @@ def run(
         by_ep.setdefault(int(row["episode"]), []).append(row)
     run_started = time.time()
     print("started", stamp(), flush=True)
-    rider = seats - 1 if free_rider else None
 
     for ep in range(episodes):
         have = by_ep.get(ep, [])
         if len(have) >= rounds:
             print("episode", ep, "already done")
             continue
-        env = ScriptedPGG(n=seats, seed=seed + ep)
-        real_to_show, show_to_real, display_order = labels_for(seats, seed + ep)
+        ids = episode_ids(seats, seed + ep)
+        order = list(ids)
+        random.Random(seed + ep + 1000).shuffle(order)
+        rider = ids[-1] if free_rider else None
+        env = ScriptedPGG(ids=ids, seed=seed + ep)
         inbox = replay(env, have)
         ep_started = time.time()
         for t in range(len(have), rounds):
             round_started = time.time()
             texts, actions, oks = {}, {}, {}
-            for i in env.ids:
-                if i == rider:
-                    actions[i] = free_rider_action(env, i)
-                    texts[i], oks[i] = "scripted free rider", True
+            for sid in env.ids:
+                if sid == rider:
+                    actions[sid] = free_rider_action(env, sid)
+                    texts[sid], oks[sid] = "scripted free rider", True
                     continue
-                key = (ep, t, i)
+                key = (ep, t, sid)
                 if key in saved:
                     text = saved[key]
                 else:
-                    text = complete(
-                        i,
-                        prompt_for(real_to_show[i], env, real_to_show, display_order, inbox[i]),
-                    )
-                    save_seat(seats_path, ep, t, i, text)
+                    text = complete(sid, prompt_for(sid, env, order, inbox[sid]))
+                    save_seat(seats_path, ep, t, sid, text)
                     saved[key] = text
-                action, ok = to_real(parse_model_text(text), show_to_real, env.n)
-                texts[i], actions[i], oks[i] = text, action, ok
+                action, ok = repair(parse_model_text(text), env.ids)
+                texts[sid], actions[sid], oks[sid] = text, action, ok
             contrib = {i: actions[i]["contribute"] for i in env.ids}
             pay = env.payoffs(contrib, env.working)
-            noms = {i: set(actions[i]["nominate"]) for i in env.ids}
+            noms = {i: actions[i]["nominate"] for i in env.ids}
             finished = time.time()
             row = {
                 "episode": ep,
@@ -224,12 +200,13 @@ def run(
                 "seats": seats,
                 "groups": groups,
                 "ledger": True,
-                "label_map": {str(real): show for real, show in real_to_show.items()},
+                "ids": ids,
+                "free_rider": rider,
                 "working": sorted(env.working),
-                "ok": {str(i): oks[i] for i in env.ids},
-                "action": {str(i): actions[i] for i in env.ids},
-                "pay": {str(i): pay[i] for i in env.ids},
-                "text_head": {str(i): texts[i][:120] for i in env.ids},
+                "ok": {i: oks[i] for i in env.ids},
+                "action": actions,
+                "pay": pay,
+                "text_head": {i: texts[i][:120] for i in env.ids},
             }
             with path.open("a") as f:
                 f.write(json.dumps(row) + "\n")
