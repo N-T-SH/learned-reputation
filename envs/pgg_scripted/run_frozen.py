@@ -1,7 +1,7 @@
 """Frozen smoke. A paid reply is saved before the next seat is called.
 
+Each round records when it finished and how many seconds it took.
 A rerun reuses finished rounds and any seat reply already on disk.
-Temperature and seat count are part of the file name, so a new setting does not resume an old log.
 """
 
 from __future__ import annotations
@@ -10,12 +10,18 @@ import argparse
 import json
 import os
 import re
+import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 from agents.frozen.fake_lm import complete as fake_complete
 from agents.frozen.openrouter_lm import complete as openrouter_complete
 from envs.pgg_scripted.env import ScriptedPGG
 from envs.pgg_scripted.schema import repair
+
+
+def stamp() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
 def parse_model_text(text: str):
@@ -121,6 +127,8 @@ def run(
     by_ep: dict[int, list[dict]] = {}
     for row in done:
         by_ep.setdefault(int(row["episode"]), []).append(row)
+    run_started = time.time()
+    print("started", stamp(), flush=True)
 
     for ep in range(episodes):
         have = by_ep.get(ep, [])
@@ -129,7 +137,9 @@ def run(
             continue
         env = ScriptedPGG(n=seats, seed=seed + ep)
         inbox = replay(env, have)
+        ep_started = time.time()
         for t in range(len(have), rounds):
+            round_started = time.time()
             texts, actions, oks = {}, {}, {}
             for i in env.ids:
                 key = (ep, t, i)
@@ -145,9 +155,13 @@ def run(
             contrib = {i: actions[i]["contribute"] for i in env.ids}
             pay = env.payoffs(contrib, env.working)
             noms = {i: set(actions[i]["nominate"]) for i in env.ids}
+            finished = time.time()
             row = {
                 "episode": ep,
                 "t": t,
+                "finished_at": stamp(),
+                "round_seconds": round(finished - round_started, 1),
+                "elapsed_seconds": round(finished - run_started, 1),
                 "speaker": label,
                 "reasoning": "off",
                 "temperature": temperature,
@@ -171,8 +185,12 @@ def run(
                     for dest in action["nominate"]:
                         if dest != sender:
                             inbox[dest].append(action["message"])
-        print("episode", ep, "done")
-    print("wrote", path, "speaker=" + label, "groups=" + groups, "reasoning=off", "temperature=" + str(temperature))
+        print("episode", ep, "done", "seconds", round(time.time() - ep_started, 1), flush=True)
+    total = round(time.time() - run_started, 1)
+    print(
+        "wrote", path, "speaker=" + label, "groups=" + groups,
+        "reasoning=off", "temperature=" + str(temperature), "seconds=" + str(total),
+    )
     return path
 
 
