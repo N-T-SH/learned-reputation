@@ -48,6 +48,7 @@ Lab loop from 2 Oct: implementation bot writes the code, explains it, and asks a
 | N=4, temperature 0 | 800 replies, all ok. Seat 3 out after round 1 in every episode. Episodes were copies. |
 | N=8, Qwen3 8B, temperature 0.4 | 800 replies, all ok. Working size mostly 4. 376 seat-rounds left out. Contributions 0.5 to 0.8. Three episodes ended on the same four seats. |
 | N=8, Qwen 3.8 27B, temperature 0.4 | 100 rows, 800 replies, all ok. Working size spread from 1 to 8, most often 3. 388 seat-rounds left out. Seat 7 out most often. Contributions 0.5 to 1.0, mean 0.754. None below 0.5. In-group mean contribution 0.775, out 0.731. Pay in 1.465, out 0.8. 27 distinct working sets. Episodes did not copy each other. No timer fields: this process started before that commit. Not a training result. |
+| OpenRouter bill | $0.03 after the 8B file. $0.23 total after the 27B smoke and 800-call file. Nitesh, 3 Oct. |
 | T2-e | Not started. Fireworks serverless can do a GRPO-style LoRA on a listed model, not on the 8B id. |
 
 ## Next
@@ -55,6 +56,6 @@ Lab loop from 2 Oct: implementation bot writes the code, explains it, and asks a
 Write `notes/t2-gate.md` from the 27B file. Then the train-or-not call. Do not open T3.
 
 ---
-**Signed:** Implementation bot — 2026-10-03 ~04:20 EDT — 27B frozen file finished. Better before picture, still no low-contribution exclusion. T2 not finished.
+**Signed:** Implementation bot — 2026-10-03 ~04:35 EDT — OpenRouter total $0.23 after the 27B file. T2 not finished.
 **Signed:** ReputationLearning — 2026-10-02 ~15:58 IST — one-line pointer: 2month-plan speed-run synced; no exit-criteria edits.
 **Signed:** ReputationLearning — 2026-10-02 ~16:01 IST — pointer only: go/no-go + optional <$25 pilot after N=4 finish + N=8 frozen.
