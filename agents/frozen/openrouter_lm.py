@@ -2,6 +2,7 @@
 
 reasoning_off sends both OpenRouter's switch and Qwen's enable_thinking false.
 max_tokens caps a reasoning leak. A 400 is not retried.
+A successful call does not print. Waits still print.
 """
 
 from __future__ import annotations
@@ -72,20 +73,14 @@ def complete(
             with urllib.request.urlopen(req, timeout=90) as resp:
                 payload = json.loads(resp.read().decode())
             message = payload["choices"][0]["message"]
-            reasoning = message.get("reasoning") or ""
-            content = message.get("content") or ""
-            print(
-                f"seat {seat} chars={len(content)} reasoning_chars={len(reasoning)}",
-                flush=True,
-            )
-            return content
+            return message.get("content") or ""
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode()[:300]
             if exc.code == 400:
                 raise RuntimeError(f"OpenRouter HTTP 400: {detail}") from exc
             if exc.code in (408, 409, 429, 500, 502, 503, 504) and attempt < 7:
                 wait = 30 * (attempt + 1) if exc.code == 429 else 2 ** attempt
-                print(f"seat {seat} HTTP {exc.code}, waiting {wait}s", flush=True)
+                print(f"HTTP {exc.code}, waiting {wait}s", flush=True)
                 time.sleep(wait)
                 last = f"HTTP {exc.code}: {detail}"
                 continue
@@ -94,7 +89,7 @@ def complete(
             last = str(exc)
             if attempt < 7:
                 wait = 2 ** attempt
-                print(f"seat {seat} connection dropped, waiting {wait}s", flush=True)
+                print(f"connection dropped, waiting {wait}s", flush=True)
                 time.sleep(wait)
                 continue
             raise RuntimeError(f"OpenRouter connection failed after retries: {last}") from exc
