@@ -1,8 +1,7 @@
 """OpenRouter speaker. Returns text, never a dict.
 
-A 429 waits and tries again. That request was refused, so it is not a paid reply.
-A 400 is not retried. A dropped socket is retried on a short wait.
-Temperature is passed in. Zero repeats one path. A later trained run must use the same value.
+reasoning_off sends both OpenRouter's switch and Qwen's enable_thinking false.
+max_tokens caps a reasoning leak. A 400 is not retried.
 """
 
 from __future__ import annotations
@@ -41,6 +40,7 @@ def complete(
     body = {
         "model": chosen,
         "temperature": temperature,
+        "max_tokens": 200,
         "messages": [
             {
                 "role": "system",
@@ -54,7 +54,8 @@ def complete(
         ],
     }
     if reasoning_off:
-        body["reasoning"] = {"enabled": False}
+        body["reasoning"] = {"enabled": False, "effort": "none"}
+        body["chat_template_kwargs"] = {"enable_thinking": False}
     data = json.dumps(body).encode()
     last = "no attempt"
     for attempt in range(8):
@@ -70,7 +71,14 @@ def complete(
         try:
             with urllib.request.urlopen(req, timeout=90) as resp:
                 payload = json.loads(resp.read().decode())
-            return payload["choices"][0]["message"]["content"]
+            message = payload["choices"][0]["message"]
+            reasoning = message.get("reasoning") or ""
+            content = message.get("content") or ""
+            print(
+                f"seat {seat} chars={len(content)} reasoning_chars={len(reasoning)}",
+                flush=True,
+            )
+            return content
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode()[:300]
             if exc.code == 400:
