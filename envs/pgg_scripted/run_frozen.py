@@ -1,7 +1,7 @@
 """Frozen run. The seat id in the prompt is the seat id in the log.
 
-Each episode draws a fresh 6-character id per seat. Repair accepts those ids.
-A paid reply is saved before the next seat is called.
+Each episode draws fresh 6-character ids. Each seat sees the ledger in its own order.
+--free-rider adds two scripted seats: contribution 0 and contribution 0.3.
 """
 
 from __future__ import annotations
@@ -55,6 +55,12 @@ def episode_ids(n: int, seed: int) -> list[str]:
     return ids
 
 
+def order_for(ids: list[str], seat: str, episode: int, t: int) -> list[str]:
+    order = list(ids)
+    random.Random(f"{episode}:{t}:{seat}").shuffle(order)
+    return order
+
+
 def prompt_for(seat: str, env: ScriptedPGG, order: list[str], inbox: list[str]) -> str:
     lines = [
         f"You are seat {seat}.",
@@ -73,11 +79,11 @@ def prompt_for(seat: str, env: ScriptedPGG, order: list[str], inbox: list[str]) 
     return "\n".join(lines)
 
 
-def free_rider_action(env: ScriptedPGG, seat: str) -> dict:
+def scripted_action(env: ScriptedPGG, seat: str, contribute: float) -> dict:
     last = env.history[-1]["c"] if env.history else {i: 0.0 for i in env.ids}
     others = [i for i in env.ids if i != seat]
     top = sorted(others, key=lambda i: last[i], reverse=True)[:2]
-    return {"message": "", "nominate": top, "contribute": 0.0}
+    return {"message": "", "nominate": top, "contribute": contribute}
 
 
 def speaker(name: str | None, model: str | None, temperature: float):
@@ -143,7 +149,7 @@ def run(
 ) -> Path:
     label, complete = speaker(speaker_name, model, temperature)
     slug = "fake" if label == "FakeLM" else label.split(":", 1)[-1].replace("/", "_")
-    tag = "ledger_id6" + ("_fr" if free_rider else "")
+    tag = "ledger_id6_probe" if free_rider else "ledger_id6"
     path = Path("runs/pgg") / f"frozen_{slug}_{groups}_s{seats}_t{temperature}_{tag}_seed{seed}_n{episodes}.jsonl"
     seats_path = path.with_suffix(".seats.jsonl")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -161,9 +167,7 @@ def run(
             print("episode", ep, "already done")
             continue
         ids = episode_ids(seats, seed + ep)
-        order = list(ids)
-        random.Random(seed + ep + 1000).shuffle(order)
-        rider = ids[-1] if free_rider else None
+        probes = {ids[-1]: 0.0, ids[-2]: 0.3} if free_rider else {}
         env = ScriptedPGG(ids=ids, seed=seed + ep)
         inbox = replay(env, have)
         ep_started = time.time()
@@ -171,15 +175,15 @@ def run(
             round_started = time.time()
             texts, actions, oks = {}, {}, {}
             for sid in env.ids:
-                if sid == rider:
-                    actions[sid] = free_rider_action(env, sid)
-                    texts[sid], oks[sid] = "scripted free rider", True
+                if sid in probes:
+                    actions[sid] = scripted_action(env, sid, probes[sid])
+                    texts[sid], oks[sid] = f"scripted c={probes[sid]}", True
                     continue
                 key = (ep, t, sid)
                 if key in saved:
                     text = saved[key]
                 else:
-                    text = complete(sid, prompt_for(sid, env, order, inbox[sid]))
+                    text = complete(sid, prompt_for(sid, env, order_for(ids, sid, ep, t), inbox[sid]))
                     save_seat(seats_path, ep, t, sid, text)
                     saved[key] = text
                 action, ok = repair(parse_model_text(text), env.ids)
@@ -201,7 +205,7 @@ def run(
                 "groups": groups,
                 "ledger": True,
                 "ids": ids,
-                "free_rider": rider,
+                "probes": probes,
                 "working": sorted(env.working),
                 "ok": {i: oks[i] for i in env.ids},
                 "action": actions,
