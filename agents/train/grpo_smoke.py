@@ -1,8 +1,8 @@
 """One GRPO step on Fireworks serverless. Not the study pilot.
 
-Needs Python 3.11+ and FIREWORKS_API_KEY. The reward here is a stand-in:
-a parsed JSON reply scores 1, anything else scores 0. The study reward is
-the seat's return from that round to the end of the episode.
+Install with uv into .venv-train on Python 3.11. Needs FIREWORKS_API_KEY.
+The reward here is a stand-in: a parsed JSON reply scores 1, anything else 0.
+The study reward is the seat's return from that round to the end of the episode.
 """
 
 from __future__ import annotations
@@ -20,7 +20,10 @@ def main() -> None:
     try:
         from fireworks.training.sdk import FiretitanServiceClient
     except ImportError as exc:
-        raise SystemExit("pip install 'fireworks-ai[training]>=1.2.11,<2'") from exc
+        raise SystemExit(
+            "uv venv --python 3.11 .venv-train && source .venv-train/bin/activate "
+            "&& uv pip install 'fireworks-ai[training]>=1.2.11,<2'"
+        ) from exc
 
     base = "accounts/fireworks/models/qwen3p8-27b"
     service = FiretitanServiceClient(
