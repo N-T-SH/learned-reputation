@@ -1,7 +1,7 @@
-"""Short GRPO pilot. Prompt text matches the frozen file.
+"""Short GRPO pilot. Same rendered prompt as the Fireworks frozen file.
 
-No system line and no chat wrapper. The ledger order is shuffled per seat,
-as in the frozen run. A group with no return spread is logged and skipped.
+The ledger block is the user message, thinking off. A group with no return
+spread is logged and skipped. Run the frozen file first.
 """
 
 from __future__ import annotations
@@ -11,8 +11,9 @@ import os
 import sys
 from pathlib import Path
 
+from agents.train.prompt import rendered_prompt
 from envs.pgg_scripted.env import ScriptedPGG
-from envs.pgg_scripted.run_frozen import episode_ids, order_for, parse_model_text, prompt_for
+from envs.pgg_scripted.run_frozen import episode_ids, order_for, parse_model_text
 from envs.pgg_scripted.schema import repair
 
 
@@ -88,13 +89,13 @@ def main() -> None:
     trainer = service.create_lora_training_client(
         base_model="accounts/fireworks/models/qwen3p8-27b", rank=8
     )
-    snapshot = trainer.save_weights_for_sampler("pilot-0002").result().path
+    snapshot = trainer.save_weights_for_sampler("pilot-0003").result().path
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3.5-27B")
     sampler = service.create_sampling_client(model_path=snapshot, tokenizer=tokenizer)
     ids = episode_ids(8, 0)
     probes = probes_for(ids)
     env = ScriptedPGG(ids=ids, seed=0)
-    path = Path("runs/train/grpo_pilot_frozenprompt_seed0.jsonl")
+    path = Path("runs/train/grpo_pilot_chat_seed0.jsonl")
     path.parent.mkdir(parents=True, exist_ok=True)
     steps = 0
     for t in range(rounds):
@@ -103,7 +104,7 @@ def main() -> None:
         for seat in ids:
             if seat in probes:
                 continue
-            text = prompt_for(seat, env, order_for(ids, seat, 0, t), [])
+            text = rendered_prompt(tokenizer, seat, env, order_for(ids, seat, 0, t), [])
             prompt_ids = tokenizer.encode(text)
             sampled = sampler.sample(
                 prompt=ModelInput.from_ints(prompt_ids),
@@ -144,7 +145,7 @@ def main() -> None:
             ).result()
         row = {
             "t": t,
-            "prompt": "frozen",
+            "prompt": "fireworks-chat",
             "probes": probes,
             "working": sorted(env.working),
             "action": actions,
