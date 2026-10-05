@@ -4,38 +4,36 @@
 **Opened:** 2026-10-01
 
 ## Status
-**OPEN.** Frozen probe file is the before picture. Fireworks GRPO smoke took one optimizer step. The study reward is not attached yet. Do not open T3.
+**OPEN.** Return-to-go pilot ran. Nine of thirty groups took a step. Not a learning result. Do not open T3.
 
 ## Locks (do not reopen)
 
-1. Visibility: public ledger. Last five rounds of every seat's contribution and nominations. Six-character ids, new each episode.
+1. Visibility: public ledger. Last five rounds. Six-character ids, new each episode.
 2. Groups: both must nominate each other. A lone seat gets isolation, 0.8.
 3. Units: y=1, r=1.6, isolation 0.8.
 4. Before picture: `runs/pgg/frozen_qwen_qwen3.8-27b_choice_s8_t0.4_ledger_id6_probe_seed0_n5.jsonl`.
 5. No reputation scalar and no game-theory jargon in prompts.
 6. All model text enters the env only through `repair`.
-7. A training reward must be return from that round to the end of the episode, not that round's payoff alone.
+7. A training reward is return from that round to the end of the episode.
 
 ## Exit criteria
 
-- [x] FakeLM smoke
-- [x] OpenRouter smoke
 - [x] Ledger probe file logged
 - [x] `notes/t2-gate.md`
-- [x] Fireworks GRPO plumbing smoke. One step, stand-in reward.
-- [ ] Training pilot with return-to-go, or a clear failure report
+- [x] Return-to-go pilot logged. `runs/train/grpo_pilot_seed0.jsonl`
+- [ ] A trained file compared with the frozen probe file
 - [ ] Tracker marked FINISHED
 
 ## Log
 
 | Block | Result |
 |-------|--------|
-| Probe file | Zero seat named 15/570 after round 0. 0.3 seat named 21/570. Model seats named each other 1492/2850. Not a training result. |
-| GRPO smoke | Qwen 3.8 27B, chat template, thinking off. Four short JSON replies. Scores 0.5, 0.5, 0.5, 0.95. Advantages about -0.11, -0.11, -0.11, 0.34. `step_ok ForwardBackwardOutput`. Reward was the contribute number, not episode return. |
+| Probe file | Zero named 15/570 after round 0. 0.3 named 21/570. Model named model 1492/2850. |
+| GRPO pilot | Five rounds, six model seats, four replies. 30 groups, 9 with spread, 21 skipped. Cost $0.21. Round 0 continuing actions had empty nominations, so round 1 working set was empty. Model contribution on the continuing action 0.4 to 0.8. Not a learning result. |
 
 ## Next
 
-Attach the game return to this loop. Do not open T3.
+Do not read this file as a trained policy. A comparison needs a frozen file and a trained file on the same prompt path. Do not open T3.
 
 ---
-**Signed:** Implementation bot — 2026-10-05 ~02:05 EDT — one GRPO step completed on a stand-in score. T2 not finished.
+**Signed:** Implementation bot — 2026-10-05 ~02:47 EDT — pilot cost $0.21, 9 of 30 groups stepped. T2 not finished.
