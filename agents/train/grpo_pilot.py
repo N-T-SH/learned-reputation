@@ -1,7 +1,7 @@
-"""Short GRPO pilot. Same game as the frozen probe file.
+"""Short GRPO pilot. Prompt text matches the frozen file.
 
-Eight seats, two scripted probes, six model seats. Four replies per decision.
-A group with no return spread is logged and not updated. Not a full training run.
+No system line and no chat wrapper. The ledger order is shuffled per seat,
+as in the frozen run. A group with no return spread is logged and skipped.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 from envs.pgg_scripted.env import ScriptedPGG
-from envs.pgg_scripted.run_frozen import episode_ids, parse_model_text, prompt_for
+from envs.pgg_scripted.run_frozen import episode_ids, order_for, parse_model_text, prompt_for
 from envs.pgg_scripted.schema import repair
 
 
@@ -88,32 +88,23 @@ def main() -> None:
     trainer = service.create_lora_training_client(
         base_model="accounts/fireworks/models/qwen3p8-27b", rank=8
     )
-    snapshot = trainer.save_weights_for_sampler("pilot-0001").result().path
+    snapshot = trainer.save_weights_for_sampler("pilot-0002").result().path
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3.5-27B")
     sampler = service.create_sampling_client(model_path=snapshot, tokenizer=tokenizer)
     ids = episode_ids(8, 0)
     probes = probes_for(ids)
     env = ScriptedPGG(ids=ids, seed=0)
-    path = Path("runs/train/grpo_pilot_seed0.jsonl")
+    path = Path("runs/train/grpo_pilot_frozenprompt_seed0.jsonl")
     path.parent.mkdir(parents=True, exist_ok=True)
     steps = 0
     for t in range(rounds):
-        order = list(ids)
         actions = scripted(env, probes)
         groups = {}
         for seat in ids:
             if seat in probes:
                 continue
-            rendered = tokenizer.apply_chat_template(
-                [
-                    {"role": "system", "content": "Reply with one JSON object only. No reasoning."},
-                    {"role": "user", "content": prompt_for(seat, env, order, [])},
-                ],
-                tokenize=False,
-                add_generation_prompt=True,
-                enable_thinking=False,
-            )
-            prompt_ids = tokenizer.encode(rendered)
+            text = prompt_for(seat, env, order_for(ids, seat, 0, t), [])
+            prompt_ids = tokenizer.encode(text)
             sampled = sampler.sample(
                 prompt=ModelInput.from_ints(prompt_ids),
                 num_samples=group,
@@ -153,6 +144,7 @@ def main() -> None:
             ).result()
         row = {
             "t": t,
+            "prompt": "frozen",
             "probes": probes,
             "working": sorted(env.working),
             "action": actions,
