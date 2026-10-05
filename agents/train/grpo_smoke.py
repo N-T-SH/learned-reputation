@@ -1,7 +1,7 @@
 """One GRPO step on Fireworks serverless. Not the study pilot.
 
-A reply scores 1 only if the text itself is a JSON object with contribute.
-Advantages are the group mean subtracted from that score. One step if they differ.
+The smoke reward is the contribute number, so a group can have spread.
+A reply that is not JSON scores 0. The study reward replaces this number.
 """
 
 from __future__ import annotations
@@ -22,7 +22,10 @@ def score(text: str) -> float:
         parsed = json.loads(raw[: raw.rfind("}") + 1])
     except json.JSONDecodeError:
         return 0.0
-    return 1.0 if isinstance(parsed, dict) and "contribute" in parsed else 0.0
+    value = parsed.get("contribute") if isinstance(parsed, dict) else None
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return 0.0
+    return float(value)
 
 
 def datum_for(prompt_ids: list[int], sequence, advantage: float):
@@ -63,7 +66,7 @@ def main() -> None:
     )
     trainer = service.create_lora_training_client(base_model=base, rank=8)
     print("session", service.training_session_id, "run", trainer.run_id, flush=True)
-    snapshot = trainer.save_weights_for_sampler("smoke-0003").result().path
+    snapshot = trainer.save_weights_for_sampler("smoke-0004").result().path
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3.5-27B")
     sampler = service.create_sampling_client(model_path=snapshot, tokenizer=tokenizer)
     messages = [
