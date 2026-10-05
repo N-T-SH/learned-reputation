@@ -1,8 +1,7 @@
 """One GRPO step scored by the rest of a short episode.
 
-The ledger has a 0 seat. Scripted cooperators do not name it. The zero names
-the learner. The sampled action is kept for the rest of the episode, so naming
-the zero, or contributing less, can change the return.
+Eight replies at temperature 1. The ledger has a 0 seat. The sampled action
+is kept, so naming that seat or contributing less can change the return.
 """
 
 from __future__ import annotations
@@ -84,7 +83,7 @@ def main() -> None:
     trainer = service.create_lora_training_client(
         base_model="accounts/fireworks/models/qwen3p8-27b", rank=8
     )
-    snapshot = trainer.save_weights_for_sampler("return-0002").result().path
+    snapshot = trainer.save_weights_for_sampler("return-0003").result().path
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3.5-27B")
     sampler = service.create_sampling_client(model_path=snapshot, tokenizer=tokenizer)
     ids = ["k3p9qa", "m8n2ld", "q1w4er", "z7c6vb"]
@@ -106,8 +105,8 @@ def main() -> None:
     prompt_ids = tokenizer.encode(rendered)
     sampled = sampler.sample(
         prompt=ModelInput.from_ints(prompt_ids),
-        num_samples=4,
-        sampling_params={"max_tokens": 80, "temperature": 0.4},
+        num_samples=8,
+        sampling_params={"max_tokens": 80, "temperature": 1.0},
     ).result()
     returns = []
     for sequence in sampled.sequences:
