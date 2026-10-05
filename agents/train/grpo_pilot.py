@@ -1,24 +1,33 @@
-"""Continue the chat-prompt pilot to 15 rounds.
+"""One 20-round GRPO episode. Does not resume the 15-round file.
 
-Replays runs/train/grpo_pilot_chat_seed0.jsonl and appends the missing rounds.
-The adapter is a new session. It does not carry the first five steps.
+Ids are drawn into a list, not a set, and written on every row. The prompt
+is the shared Fireworks chat prompt. A tied group is skipped.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import random
+import string
 import sys
 from pathlib import Path
 
 from agents.train.prompt import rendered_prompt
 from envs.pgg_scripted.env import ScriptedPGG
-from envs.pgg_scripted.run_frozen import episode_ids, order_for, parse_model_text
+from envs.pgg_scripted.run_frozen import order_for, parse_model_text
 from envs.pgg_scripted.schema import repair
 
 
-def probes_for(ids: list[str]) -> dict[str, float]:
-    return {ids[-1]: 0.0, ids[-2]: 0.3}
+def stable_ids(n: int, seed: int) -> list[str]:
+    rng = random.Random(seed)
+    alphabet = string.ascii_lowercase + string.digits
+    ids = []
+    while len(ids) < n:
+        label = "".join(rng.choice(alphabet) for _ in range(6))
+        if label not in ids:
+            ids.append(label)
+    return ids
 
 
 def scripted(env: ScriptedPGG, probes: dict[str, float]) -> dict:
@@ -32,16 +41,6 @@ def scripted(env: ScriptedPGG, probes: dict[str, float]) -> dict:
             "contribute": value,
         }
     return actions
-
-
-def replay(env: ScriptedPGG, rows: list[dict]) -> None:
-    for row in rows:
-        actions = row["action"]
-        contrib = {i: actions[i]["contribute"] for i in env.ids}
-        noms = {i: actions[i]["nominate"] for i in env.ids}
-        env.record(contrib, noms)
-        env.working = env.form_groups(noms)
-        env.last_c = contrib
 
 
 def hold_return(env: ScriptedPGG, actions: dict, seat: str, rounds_left: int) -> float:
@@ -91,10 +90,11 @@ def main() -> None:
     from transformers import AutoTokenizer
     import tinker
 
-    rounds, group = 15, 4
-    path = Path("runs/train/grpo_pilot_chat_seed0.jsonl")
+    rounds, group = 20, 4
+    path = Path("runs/train/grpo_pilot_chat_r20_seed0.jsonl")
+    if path.exists():
+        raise SystemExit(f"{path} already exists. Refusing to append.")
     path.parent.mkdir(parents=True, exist_ok=True)
-    done = [json.loads(line) for line in path.read_text().splitlines() if line.strip()] if path.exists() else []
     service = FiretitanServiceClient(
         api_key=key,
         base_url="https://api.fireworks.ai/training/v1/serverless",
@@ -102,16 +102,18 @@ def main() -> None:
     trainer = service.create_lora_training_client(
         base_model="accounts/fireworks/models/qwen3p8-27b", rank=8
     )
-    snapshot = trainer.save_weights_for_sampler("pilot-0004").result().path
+    trainer.save_weights_for_sampler("pilot-r20").result()
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3.5-27B")
-    sampler = service.create_sampling_client(model_path=snapshot, tokenizer=tokenizer)
-    ids = episode_ids(8, 0)
-    probes = probes_for(ids)
+    sampler = service.create_sampling_client(
+        model_path=trainer.save_weights_for_sampler("pilot-r20b").result().path,
+        tokenizer=tokenizer,
+    )
+    ids = stable_ids(8, 0)
+    probes = {ids[-1]: 0.0, ids[-2]: 0.3}
+    print("ids", ids, "probes", probes, flush=True)
     env = ScriptedPGG(ids=ids, seed=0)
-    replay(env, done)
-    print("resume_at", len(done), "adapter", "new session", flush=True)
     steps = 0
-    for t in range(len(done), rounds):
+    for t in range(rounds):
         actions = scripted(env, probes)
         groups = {}
         for seat in ids:
@@ -136,7 +138,7 @@ def main() -> None:
                 hold_return(env, {**actions, seat: action}, seat, rounds - t)
                 for _, action, _ in parsed
             ]
-            for seat, (prompt_ids, parsed) in groups.items()
+            for seat, (_, parsed) in groups.items()
         }
         datums = []
         for seat, (prompt_ids, parsed) in groups.items():
@@ -150,19 +152,25 @@ def main() -> None:
                     for (sequence, _, _), adv in zip(parsed, advantages)
                 )
                 steps += 1
-            print("t", t, "seat", seat, "returns", [round(v, 3) for v in values], "step", spread, flush=True)
+            print("t", t, "seat", seat, "c", actions[seat]["contribute"], "step", spread, flush=True)
         if datums:
             trainer.forward_backward(datums, "importance_sampling").result()
             trainer.optim_step(
                 tinker.AdamParams(learning_rate=2.5e-5, beta1=0.9, beta2=0.95, eps=1e-8, weight_decay=0.0)
             ).result()
+            sampler.close()
+            sampler = service.create_sampling_client(
+                model_path=trainer.save_weights_for_sampler(f"r20-{t:02d}").result().path,
+                tokenizer=tokenizer,
+            )
         row = {
             "t": t,
             "prompt": "fireworks-chat",
+            "ids": ids,
             "probes": probes,
             "working": sorted(env.working),
             "action": actions,
-            "returns": {seat: values for seat, values in returns.items()},
+            "returns": returns,
         }
         with path.open("a") as handle:
             handle.write(json.dumps(row) + "\n")
