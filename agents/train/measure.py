@@ -1,7 +1,7 @@
-"""Train one episode, then measure three frozen and three trained episodes.
+"""Three frozen measurement episodes. No optimizer step.
 
-Measurement episodes do not take an optimizer step. The trained measurement
-reads the snapshot path written by the train run. Ids are new each episode.
+The sampler stays on the session that saved the adapter. A second client
+has no inference route and returns 404.
 """
 
 from __future__ import annotations
@@ -76,57 +76,36 @@ def one_episode(sampler, tokenizer, ids: list[str], probes: dict[str, float], se
         print("seed", seed, "t", t, "working", len(env.working), flush=True)
 
 
-def measure(kind: str, snapshot: str) -> None:
+def main() -> None:
+    if sys.version_info < (3, 11):
+        raise SystemExit("Use .venv-train. Fireworks needs Python 3.11+.")
+    key = os.environ.get("FIREWORKS_API_KEY", "").strip()
+    if not key:
+        raise SystemExit("FIREWORKS_API_KEY is not set. Source .env once.")
     from fireworks.training.sdk import FiretitanServiceClient
     from transformers import AutoTokenizer
 
-    key = os.environ["FIREWORKS_API_KEY"].strip()
+    path = Path("runs/train/measure_frozen.jsonl")
+    if path.exists():
+        raise SystemExit(f"{path} already exists. Refusing to append.")
+    path.parent.mkdir(parents=True, exist_ok=True)
     service = FiretitanServiceClient(
         api_key=key,
         base_url="https://api.fireworks.ai/training/v1/serverless",
     )
+    trainer = service.create_lora_training_client(
+        base_model="accounts/fireworks/models/qwen3p8-27b", rank=8
+    )
+    snapshot = trainer.save_weights_for_sampler("base-r20").result().path
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3.5-27B")
     sampler = service.create_sampling_client(model_path=snapshot, tokenizer=tokenizer)
-    path = Path(f"runs/train/measure_{kind}.jsonl")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if path.exists():
-        raise SystemExit(f"{path} already exists. Refusing to append.")
-    seeds = [1, 2, 3] if kind == "frozen" else [4, 5, 6]
-    for seed in seeds:
+    for seed in (11, 12, 13):
         ids = stable_ids(8, seed)
         probes = {ids[-1]: 0.0, ids[-2]: 0.3}
-        print("kind", kind, "seed", seed, "probes", probes, flush=True)
+        print("seed", seed, "probes", probes, flush=True)
         one_episode(sampler, tokenizer, ids, probes, seed, path)
     print("wrote", path, flush=True)
     sampler.close()
-
-
-def main() -> None:
-    if sys.version_info < (3, 11):
-        raise SystemExit("Use .venv-train. Fireworks needs Python 3.11+.")
-    if not os.environ.get("FIREWORKS_API_KEY", "").strip():
-        raise SystemExit("FIREWORKS_API_KEY is not set. Source .env once.")
-    mode = sys.argv[1] if len(sys.argv) > 1 else ""
-    if mode == "frozen":
-        from fireworks.training.sdk import FiretitanServiceClient
-
-        service = FiretitanServiceClient(
-            api_key=os.environ["FIREWORKS_API_KEY"].strip(),
-            base_url="https://api.fireworks.ai/training/v1/serverless",
-        )
-        trainer = service.create_lora_training_client(
-            base_model="accounts/fireworks/models/qwen3p8-27b", rank=8
-        )
-        snapshot = trainer.save_weights_for_sampler("base-r20").result().path
-        measure("frozen", snapshot)
-        return
-    if mode == "trained":
-        saved = Path("runs/train/adapter_r20.txt")
-        if not saved.exists():
-            raise SystemExit("No adapter_r20.txt. Train an episode and save the snapshot path first.")
-        measure("trained", saved.read_text().strip())
-        return
-    raise SystemExit("Use: python -m agents.train.measure frozen   or   python -m agents.train.measure trained")
 
 
 if __name__ == "__main__":
