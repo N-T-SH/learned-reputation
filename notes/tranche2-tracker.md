@@ -4,38 +4,36 @@
 **Opened:** 2026-10-01
 
 ## Status
-**OPEN.** Frozen-prompt pilot parsed poorly. Not a comparison with the OpenRouter file. Do not open T3.
+**OPEN.** Fireworks frozen chat file parsed. It is the before picture for the next pilot. Do not compare it with the OpenRouter file. Do not open T3.
 
 ## Locks (do not reopen)
 
 1. Visibility: public ledger. Last five rounds. Six-character ids, new each episode.
 2. Groups: both must nominate each other. A lone seat gets isolation, 0.8.
 3. Units: y=1, r=1.6, isolation 0.8.
-4. Before picture: `runs/pgg/frozen_qwen_qwen3.8-27b_choice_s8_t0.4_ledger_id6_probe_seed0_n5.jsonl`.
+4. Fireworks comparison prompt: ledger block as the user message, thinking off. Shared by `agents/train/prompt.py`.
 5. No reputation scalar and no game-theory jargon in prompts.
 6. All model text enters the env only through `repair`.
 7. A training reward is return from that round to the end of the episode.
-8. A trained file must use the frozen prompt block. No system line.
 
 ## Exit criteria
 
-- [x] Ledger probe file logged
-- [x] `notes/t2-gate.md`
-- [x] Frozen-prompt pilot logged. `runs/train/grpo_pilot_frozenprompt_seed0.jsonl`
-- [ ] A trained file whose replies parse, compared with the frozen probe file
+- [x] OpenRouter probe file logged
+- [x] Fireworks frozen chat file logged. `runs/train/fireworks_frozen_seed0.jsonl`
+- [ ] Pilot on that same prompt, then a comparison with the Fireworks frozen file
 - [ ] Tracker marked FINISHED
 
 ## Log
 
 | Block | Result |
 |-------|--------|
-| Probe file | OpenRouter. Zero named 15/570 after round 0. 0.3 named 21/570. Model named model 1492/2850. |
-| Wrapped pilot | Chat template. 9 of 30 groups stepped. Cost $0.21. Not comparable. |
-| Frozen-prompt pilot | Same words as the frozen file. 14 of 30 groups stepped. 13 of 30 continuing actions were the repair failure: empty nomination, contribution 0. Round 1 working set was empty. Not a learning result. |
+| OpenRouter probe | Zero named 15/570 after round 0. 0.3 named 21/570. Different endpoint. |
+| Plain Fireworks pilot | 13 of 30 continuing actions failed repair. Not the comparison. |
+| Fireworks frozen chat | 30 of 30 ok. Round 0 nominations empty, so round 1 working set was empty. Later rounds formed groups. Contributions 0.5 to 1.0, mean 0.94. Zero named 9/30. 0.3 named 8/30. Model named model 45/150. No optimizer step. |
 
 ## Next
 
-The plain block does not parse on this Fireworks sampler. Do not compare it with the OpenRouter file. Do not open T3.
+Run `python -m agents.train.grpo_pilot` on this prompt. Compare with this file, not the OpenRouter file. Do not open T3.
 
 ---
-**Signed:** Implementation bot — 2026-10-05 ~03:15 EDT — frozen-prompt pilot mostly failed repair. T2 not finished.
+**Signed:** Implementation bot — 2026-10-05 ~03:41 EDT — Fireworks frozen chat file parsed. T2 not finished.
