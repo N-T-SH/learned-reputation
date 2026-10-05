@@ -4,7 +4,7 @@
 **Opened:** 2026-10-01
 
 ## Status
-**OPEN.** Return-to-go pilot ran. Nine of thirty groups took a step. Not a learning result. Do not open T3.
+**OPEN.** Frozen-prompt pilot parsed poorly. Not a comparison with the OpenRouter file. Do not open T3.
 
 ## Locks (do not reopen)
 
@@ -15,25 +15,27 @@
 5. No reputation scalar and no game-theory jargon in prompts.
 6. All model text enters the env only through `repair`.
 7. A training reward is return from that round to the end of the episode.
+8. A trained file must use the frozen prompt block. No system line.
 
 ## Exit criteria
 
 - [x] Ledger probe file logged
 - [x] `notes/t2-gate.md`
-- [x] Return-to-go pilot logged. `runs/train/grpo_pilot_seed0.jsonl`
-- [ ] A trained file compared with the frozen probe file
+- [x] Frozen-prompt pilot logged. `runs/train/grpo_pilot_frozenprompt_seed0.jsonl`
+- [ ] A trained file whose replies parse, compared with the frozen probe file
 - [ ] Tracker marked FINISHED
 
 ## Log
 
 | Block | Result |
 |-------|--------|
-| Probe file | Zero named 15/570 after round 0. 0.3 named 21/570. Model named model 1492/2850. |
-| GRPO pilot | Five rounds, six model seats, four replies. 30 groups, 9 with spread, 21 skipped. Cost $0.21. Round 0 continuing actions had empty nominations, so round 1 working set was empty. Model contribution on the continuing action 0.4 to 0.8. Not a learning result. |
+| Probe file | OpenRouter. Zero named 15/570 after round 0. 0.3 named 21/570. Model named model 1492/2850. |
+| Wrapped pilot | Chat template. 9 of 30 groups stepped. Cost $0.21. Not comparable. |
+| Frozen-prompt pilot | Same words as the frozen file. 14 of 30 groups stepped. 13 of 30 continuing actions were the repair failure: empty nomination, contribution 0. Round 1 working set was empty. Not a learning result. |
 
 ## Next
 
-Do not read this file as a trained policy. A comparison needs a frozen file and a trained file on the same prompt path. Do not open T3.
+The plain block does not parse on this Fireworks sampler. Do not compare it with the OpenRouter file. Do not open T3.
 
 ---
-**Signed:** Implementation bot — 2026-10-05 ~02:47 EDT — pilot cost $0.21, 9 of 30 groups stepped. T2 not finished.
+**Signed:** Implementation bot — 2026-10-05 ~03:15 EDT — frozen-prompt pilot mostly failed repair. T2 not finished.
