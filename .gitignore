@@ -5,4 +5,4 @@ __pycache__/
 .env
 .DS_Store
 # Gate logs in runs/pgg/ are committed. Ignore later train dumps.
-runs/train/
+# runs/train/
