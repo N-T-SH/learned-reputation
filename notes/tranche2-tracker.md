@@ -4,17 +4,18 @@
 **Opened:** 2026-10-01
 
 ## Status
-**OPEN.** Three frozen measurement episodes logged. Trained measurement not started. The last adapter was not saved. Do not open T3.
+**OPEN.** Three frozen and three trained measurement episodes logged. One training episode. Do not open T3.
 
 ## Log
 
 | Block | Result |
 |-------|--------|
-| Frozen measure | `runs/train/measure_frozen.jsonl`. Seeds 11, 12, 13. Probes fixed inside each episode. Seed 11 named zero 68/120 and 0.3 42/120. Seed 12 named zero 28/120 and 0.3 14/120. Seed 13 named zero 44/120 and 0.3 42/120. Late rounds named the zero 24/30, 6/30, and 4/30. Repair failures 1, 0, 1. No optimizer step. |
+| Frozen measure | Seeds 11, 12, 13. Zero named 68/120, 28/120, 44/120. 0.3 named 42/120, 14/120, 42/120. Late zero named 24/30, 6/30, 4/30. |
+| Trained measure | `runs/train/measure_trained.jsonl`. Seeds 14, 15, 16. No steps during measurement. Zero named 0/120, 0/120, 2/120. 0.3 named 0/120, 0/120, 2/120. Late rounds named neither probe in all three. Model named model 352/600, 193/600, 299/600. Mean contribution 0.94, 0.92, 0.81. |
 
 ## Next
 
-The frozen side varies by episode. A trained comparison needs a saved adapter and three episodes with no further steps. Do not open T3.
+The gap is outside the frozen range. It is one training episode. Do not open T3.
 
 ---
-**Signed:** Implementation bot — 2026-10-05 ~10:33 EDT — three frozen episodes, rates not stable.
+**Signed:** Implementation bot — 2026-10-05 ~11:43 EDT — trained measurement almost never named either probe.
