@@ -4,25 +4,17 @@
 **Opened:** 2026-10-01
 
 ## Status
-**OPEN.** Frozen and trained 20-round files exist on the same prompt. One episode each. Do not open T3.
-
-## Locks (do not reopen)
-
-1. Comparison is by role, not by id string.
-2. Fireworks chat prompt, thinking off. Ledger block is the user message.
-3. A training reward is return from that round to the end of the episode.
-4. Ids are written on the row. Do not redraw them on resume.
+**OPEN.** Three frozen measurement episodes logged. Trained measurement not started. The last adapter was not saved. Do not open T3.
 
 ## Log
 
 | Block | Result |
 |-------|--------|
-| Trained episode | `runs/train/grpo_pilot_chat_r20_seed0.jsonl`. Zero named 25/120. 0.3 named 9/120. Model named model 280/600. Late rounds named neither probe. Updated inside the episode. |
-| Frozen episode | `runs/train/fireworks_frozen_r20_seed1.jsonl`. Own ids. Probes fixed: `9glshv` 0, `oo3sb0` 0.3. 20 rounds, 1 repair failure. Zero named 29/120. 0.3 named 24/120. Model named model 329/600. Mean contribution 0.88. Late rounds named zero 5/30 and 0.3 4/30, and named another model seat 125/150. No optimizer step. |
+| Frozen measure | `runs/train/measure_frozen.jsonl`. Seeds 11, 12, 13. Probes fixed inside each episode. Seed 11 named zero 68/120 and 0.3 42/120. Seed 12 named zero 28/120 and 0.3 14/120. Seed 13 named zero 44/120 and 0.3 42/120. Late rounds named the zero 24/30, 6/30, and 4/30. Repair failures 1, 0, 1. No optimizer step. |
 
 ## Next
 
-One episode a side is not a result. Do not open T3.
+The frozen side varies by episode. A trained comparison needs a saved adapter and three episodes with no further steps. Do not open T3.
 
 ---
-**Signed:** Implementation bot — 2026-10-05 ~05:05 EDT — frozen 20-round before picture logged.
+**Signed:** Implementation bot — 2026-10-05 ~10:33 EDT — three frozen episodes, rates not stable.
