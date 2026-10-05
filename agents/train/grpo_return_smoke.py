@@ -1,8 +1,8 @@
 """One GRPO step scored by the rest of a short episode.
 
-Four replies for one seat. Each reply is repaired, then the episode finishes
-with the other seats scripted. The reward is that seat's payoffs from the
-decision round through the end. Not a pilot.
+The ledger has a 0 seat. Scripted cooperators do not name it. The zero names
+the learner. The sampled action is kept for the rest of the episode, so naming
+the zero, or contributing less, can change the return.
 """
 
 from __future__ import annotations
@@ -15,20 +15,27 @@ from envs.pgg_scripted.run_frozen import parse_model_text, prompt_for
 from envs.pgg_scripted.schema import repair
 
 
-def others(env: ScriptedPGG, seat: str) -> dict:
-    return {
-        sid: {"message": "", "nominate": [j for j in env.ids if j != sid], "contribute": 1.0}
-        for sid in env.ids
-        if sid != seat
-    }
+def others(ids: list[str], seat: str, zero: str) -> dict:
+    actions = {}
+    for sid in ids:
+        if sid == seat:
+            continue
+        if sid == zero:
+            actions[sid] = {"message": "", "nominate": [seat], "contribute": 0.0}
+        else:
+            actions[sid] = {
+                "message": "",
+                "nominate": [j for j in ids if j not in (sid, zero)],
+                "contribute": 1.0,
+            }
+    return actions
 
 
-def finish(env: ScriptedPGG, seat: str, action: dict, rounds_left: int) -> float:
+def finish(env: ScriptedPGG, seat: str, zero: str, action: dict, rounds_left: int) -> float:
     total = 0.0
-    current = action
     for _ in range(rounds_left):
-        actions = others(env, seat)
-        actions[seat] = current
+        actions = others(env.ids, seat, zero)
+        actions[seat] = action
         contrib = {i: actions[i]["contribute"] for i in env.ids}
         noms = {i: actions[i]["nominate"] for i in env.ids}
         pay = env.payoffs(contrib, env.working)
@@ -36,7 +43,6 @@ def finish(env: ScriptedPGG, seat: str, action: dict, rounds_left: int) -> float
         env.record(contrib, noms)
         env.working = env.form_groups(noms)
         env.last_c = contrib
-        current = {"message": "", "nominate": [j for j in env.ids if j != seat], "contribute": 1.0}
     return total
 
 
@@ -78,15 +84,15 @@ def main() -> None:
     trainer = service.create_lora_training_client(
         base_model="accounts/fireworks/models/qwen3p8-27b", rank=8
     )
-    snapshot = trainer.save_weights_for_sampler("return-0001").result().path
+    snapshot = trainer.save_weights_for_sampler("return-0002").result().path
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3.5-27B")
     sampler = service.create_sampling_client(model_path=snapshot, tokenizer=tokenizer)
     ids = ["k3p9qa", "m8n2ld", "q1w4er", "z7c6vb"]
-    seat = ids[0]
+    seat, zero = ids[0], ids[-1]
     env = ScriptedPGG(ids=ids, seed=0)
     env.record(
-        {i: 1.0 for i in ids},
-        {i: [j for j in ids if j != i] for i in ids},
+        {seat: 1.0, ids[1]: 1.0, ids[2]: 1.0, zero: 0.0},
+        {seat: [ids[1], ids[2]], ids[1]: [seat, ids[2]], ids[2]: [seat, ids[1]], zero: [seat]},
     )
     rendered = tokenizer.apply_chat_template(
         [
@@ -111,9 +117,14 @@ def main() -> None:
         branch.history = list(env.history)
         branch.working = set(env.working)
         branch.last_c = dict(env.last_c)
-        value = finish(branch, seat, action, rounds_left=3)
+        value = finish(branch, seat, zero, action, rounds_left=3)
         returns.append(value)
-        print("reply", decoded[:140].replace("\n", " "), "ok", ok, "return", round(value, 3), flush=True)
+        print(
+            "reply", decoded[:120].replace("\n", " "),
+            "ok", ok, "nominate", action["nominate"], "c", action["contribute"],
+            "return", round(value, 3),
+            flush=True,
+        )
     mean = sum(returns) / len(returns)
     advantages = [value - mean for value in returns]
     print("advantages", [round(a, 3) for a in advantages], flush=True)
