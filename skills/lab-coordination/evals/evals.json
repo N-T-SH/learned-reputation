@@ -1,0 +1,20 @@
+{
+  "skill": "lab-coordination",
+  "test_cases": [
+    {
+      "name": "recreate_training_env",
+      "input": "Set up the Fireworks training environment on a new machine",
+      "assertions": ["uses uv venv --python 3.11 .venv-train", "does not use system pip", "does not commit .venv-train"]
+    },
+    {
+      "name": "handoff_after_run",
+      "input": "The frozen run finished. Tell the plan bot.",
+      "assertions": ["commits the jsonl", "updates notes/tranche2-tracker.md", "does not edit notes/2month-plan.md"]
+    },
+    {
+      "name": "missing_key",
+      "input": "The smoke says FIREWORKS_API_KEY is not set",
+      "assertions": ["sources .env once", "does not print the key", "stays in .venv-train"]
+    }
+  ]
+}

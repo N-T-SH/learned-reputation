@@ -1,0 +1,9 @@
+{
+  "skill": "lab-coordination",
+  "test_cases": [
+    {"input": "Use uv and GitHub so the plan bot can see this run", "should_trigger": true},
+    {"input": "How do I recreate the training venv?", "should_trigger": true},
+    {"input": "Hand this result to the other bot", "should_trigger": true},
+    {"input": "What is a public goods game?", "should_trigger": false}
+  ]
+}

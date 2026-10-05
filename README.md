@@ -1,39 +1,57 @@
 # learned-reputation
 
-Code for the LLM-group standing design (mechanisms, not hardcoded reputation scores).
+Code for the LLM-group standing design. Reputation is a pattern in nominations, not a score in the prompt.
 
-Owner: [N-T-SH](https://github.com/N-T-SH). This repo is the **only** code tree going forward. 
+Owner: [N-T-SH](https://github.com/N-T-SH). This repo is the only code tree.
 
-## Status
+## Recreate the environment
 
-- Week 0 concepts: done (Ueshima / RepuNet withhold / PGG / GRPO).
-- Week 1: scripted linear PGG + local visibility + ± include rules.
-- No LLM seats until a regression recovers the scripted positive rule and is ~0 on the null.
+Use uv. Do not install into the system Python.
 
-## Layout
+Lab checks, including the scripted controls and a frozen run:
 
+```bash
+uv venv --python 3.9 .venv
+source .venv/bin/activate
+uv pip install ag2
 ```
-envs/pgg_scripted/   # 4-seat toy, no LLM
-  env.py             # payoffs + local visible_c
-  policies.py        # CRUX: include_next (not implemented)
-  run_controls.py    # writes runs/pgg/{positive,null}_seed0.jsonl
-notes/               # locked specs only
-runs/pgg/
+
+Fireworks training smoke. This SDK needs Python 3.11.
+
+```bash
+uv venv --python 3.11 .venv-train
+source .venv-train/bin/activate
+uv pip install 'fireworks-ai[training]>=1.2.11,<2'
 ```
+
+`.venv/`, `.venv-train/`, and `.env` are not committed. Copy the keys into `.env` at the repo root. Source that file once in a new terminal.
 
 ## Run
 
+Scripted gate:
+
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
 python -m envs.pgg_scripted.run_controls
 ```
 
-Will raise until you fill `include_next` in `policies.py`.
+Frozen file. Flags override `.env`. The key stays in `.env`.
 
-## Locked controls
+```bash
+python -m envs.pgg_scripted.run_frozen --speaker openrouter --model qwen/qwen3.8-27b --groups choice --seats 8 --temperature 0.4 --rounds 20 --episodes 5 --free-rider
+```
 
-- Positive: include j next round iff last visible c_j ≥ 0.5 (None → include).
-- Null: each round, include self + each other seat with p=0.5; ignore history.
-- Visibility: local (last working-set contributions).
-- PGG toy: n=4, r=1.6, y=1, isolation=0.8.
+Training smoke, from `.venv-train`:
+
+```bash
+python -m agents.train.grpo_smoke
+```
+
+## Handoff
+
+GitHub is the handoff between bots. Pull before a run. Commit the jsonl and a line in `notes/tranche2-tracker.md`. Do not edit `notes/2month-plan.md` from the implementation side.
+
+The shared skill for that loop is `skills/lab-coordination/`.
+
+## Current lock
+
+Public ledger of the last five rounds. Six-character seat ids, new each episode. A lone seat gets isolation 0.8. Two scripted probes, contribution 0 and 0.3, when `--free-rider` is set. Before picture: `runs/pgg/frozen_qwen_qwen3.8-27b_choice_s8_t0.4_ledger_id6_probe_seed0_n5.jsonl`.
