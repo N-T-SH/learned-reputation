@@ -1,7 +1,7 @@
-"""Short GRPO pilot. Same rendered prompt as the Fireworks frozen file.
+"""Continue the chat-prompt pilot to 15 rounds.
 
-The ledger block is the user message, thinking off. A group with no return
-spread is logged and skipped. Run the frozen file first.
+Replays runs/train/grpo_pilot_chat_seed0.jsonl and appends the missing rounds.
+The adapter is a new session. It does not carry the first five steps.
 """
 
 from __future__ import annotations
@@ -32,6 +32,16 @@ def scripted(env: ScriptedPGG, probes: dict[str, float]) -> dict:
             "contribute": value,
         }
     return actions
+
+
+def replay(env: ScriptedPGG, rows: list[dict]) -> None:
+    for row in rows:
+        actions = row["action"]
+        contrib = {i: actions[i]["contribute"] for i in env.ids}
+        noms = {i: actions[i]["nominate"] for i in env.ids}
+        env.record(contrib, noms)
+        env.working = env.form_groups(noms)
+        env.last_c = contrib
 
 
 def hold_return(env: ScriptedPGG, actions: dict, seat: str, rounds_left: int) -> float:
@@ -81,7 +91,10 @@ def main() -> None:
     from transformers import AutoTokenizer
     import tinker
 
-    rounds, group = 5, 4
+    rounds, group = 15, 4
+    path = Path("runs/train/grpo_pilot_chat_seed0.jsonl")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    done = [json.loads(line) for line in path.read_text().splitlines() if line.strip()] if path.exists() else []
     service = FiretitanServiceClient(
         api_key=key,
         base_url="https://api.fireworks.ai/training/v1/serverless",
@@ -89,16 +102,16 @@ def main() -> None:
     trainer = service.create_lora_training_client(
         base_model="accounts/fireworks/models/qwen3p8-27b", rank=8
     )
-    snapshot = trainer.save_weights_for_sampler("pilot-0003").result().path
+    snapshot = trainer.save_weights_for_sampler("pilot-0004").result().path
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3.5-27B")
     sampler = service.create_sampling_client(model_path=snapshot, tokenizer=tokenizer)
     ids = episode_ids(8, 0)
     probes = probes_for(ids)
     env = ScriptedPGG(ids=ids, seed=0)
-    path = Path("runs/train/grpo_pilot_chat_seed0.jsonl")
-    path.parent.mkdir(parents=True, exist_ok=True)
+    replay(env, done)
+    print("resume_at", len(done), "adapter", "new session", flush=True)
     steps = 0
-    for t in range(rounds):
+    for t in range(len(done), rounds):
         actions = scripted(env, probes)
         groups = {}
         for seat in ids:
