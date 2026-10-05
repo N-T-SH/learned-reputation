@@ -4,14 +4,14 @@
 **Opened:** 2026-10-01
 
 ## Status
-**OPEN.** Ledger plus scripted free rider is the before picture. The model almost never named the seat that contributed 0. Train decision still open. Do not open T3. Do not train against the older no-ledger file.
+**OPEN.** Frozen probe file is the before picture. Fireworks GRPO smoke took one optimizer step. The study reward is not attached yet. Do not open T3.
 
 ## Locks (do not reopen)
 
-1. Visibility: public ledger. Last five rounds of every seat's contribution and nominations. Labels shuffled per episode. Log keeps real ids.
-2. Groups: both must nominate each other. One-sided nominate is not a pair. A lone seat gets isolation, 0.8.
+1. Visibility: public ledger. Last five rounds of every seat's contribution and nominations. Six-character ids, new each episode.
+2. Groups: both must nominate each other. A lone seat gets isolation, 0.8.
 3. Units: y=1, r=1.6, isolation 0.8.
-4. Before picture for a 27B pilot: `runs/pgg/frozen_qwen_qwen3.8-27b_choice_s8_t0.4_ledger_fr_seed0_n5.jsonl`. Same model, temperature 0.4, reasoning off, free rider on.
+4. Before picture: `runs/pgg/frozen_qwen_qwen3.8-27b_choice_s8_t0.4_ledger_id6_probe_seed0_n5.jsonl`.
 5. No reputation scalar and no game-theory jargon in prompts.
 6. All model text enters the env only through `repair`.
 7. A training reward must be return from that round to the end of the episode, not that round's payoff alone.
@@ -20,28 +20,22 @@
 
 - [x] FakeLM smoke
 - [x] OpenRouter smoke
-- [x] Prompt checklist committed
-- [x] Partner-choice vs fixed-group logged
-- [x] Reasoning off on the comparison model
-- [x] Ledger free-rider file logged
-- [ ] Training pilot, or a clear failure report
-- [ ] `notes/t2-gate.md` from the ledger file
+- [x] Ledger probe file logged
+- [x] `notes/t2-gate.md`
+- [x] Fireworks GRPO plumbing smoke. One step, stand-in reward.
+- [ ] Training pilot with return-to-go, or a clear failure report
 - [ ] Tracker marked FINISHED
 
 ## Log
 
 | Block | Result |
 |-------|--------|
-| Earlier frozen | No-ledger files left seats out without a contribution below 0.5. Seat 7 out 83/100 on the 27B file. That was position. |
-| Ledger + free rider | 100 rows, 800 replies, all ok. 2232 seconds. Seat 7 scripted, contribution 0. In the working set 8/100 rounds. Named by a model seat 7/700 times, and 3/665 after round 0. Model contributions 0.5 to 1.0, mean 0.83. Shown-label out rates still uneven (label 6 out 77/100, labels 0 and 5 out 22/100). Not a training result. |
-| OpenRouter bill | $0.23 after the no-ledger 27B file. This file is extra. |
-| T2-e | Not started. Reward must be return-to-go. |
+| Probe file | Zero seat named 15/570 after round 0. 0.3 seat named 21/570. Model seats named each other 1492/2850. Not a training result. |
+| GRPO smoke | Qwen 3.8 27B, chat template, thinking off. Four short JSON replies. Scores 0.5, 0.5, 0.5, 0.95. Advantages about -0.11, -0.11, -0.11, 0.34. `step_ok ForwardBackwardOutput`. Reward was the contribute number, not episode return. |
 
 ## Next
 
-Write `notes/t2-gate.md` from the ledger file. Then the train-or-not call. Do not open T3.
+Attach the game return to this loop. Do not open T3.
 
 ---
-**Signed:** Implementation bot — 2026-10-03 ~06:00 EDT — ledger free rider almost never named. T2 not finished.
-**Signed:** ReputationLearning — 2026-10-02 ~15:58 IST — one-line pointer: 2month-plan speed-run synced; no exit-criteria edits.
-**Signed:** ReputationLearning — 2026-10-02 ~16:01 IST — pointer only: go/no-go + optional <$25 pilot after N=4 finish + N=8 frozen.
+**Signed:** Implementation bot — 2026-10-05 ~02:05 EDT — one GRPO step completed on a stand-in score. T2 not finished.
