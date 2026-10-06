@@ -2,21 +2,22 @@
 **Path:** `notes/tranche2-tracker.md`
 **Repo:** `N-T-SH/learned-reputation`
 **Opened:** 2026-10-01
+**Closed:** 2026-10-06
 
 ## Status
-**OPEN.** Log probabilities work in-session. A fresh process cannot reload a snapshot. One 20-round payoff group and one placebo group are measured. Do not open T3.
+**FINISHED as a pipeline tranche.** T3 is not open. The go/no-go sentence is still Nitesh + PI.
 
-## Log
+## What closed
 
-| Block | Result |
-|---|---|
-| Reload | `reload_failed` 404 on `adapter_r20.txt`. Measurement has to finish in the saving process. |
-| Payoff 20 | `runs/train/long_payoff.jsonl`. Same ids as placebo. Zero named 1/100. 0.3 named 1/100. High named 73/100. Names per reply 1.76. Repair failures 18. Mean contribution 0.55. |
-| Placebo 20 | `runs/train/long_placebo.jsonl`. Zero named 3/100. 0.3 named 11/100. High named 43/100. Names per reply 1.05. Repair failures 41. Mean contribution 0.31. |
+The trainer runs on Fireworks. Log probabilities come back in-session. A group can be four complete episodes. A placebo step can be measured against a payoff step on the same ids. Spend is about $10 of a $40 cap.
 
-## Next
+## What did not close
 
-The payoff file names the high seat more than the placebo file. Forty-one placebo replies failed repair, so the gap is not a clean selectivity result. Do not open T3.
+A fresh process cannot reload a snapshot (404). The 20-round payoff file named the high seat 73/100 and the zero 1/100. The placebo file named the high seat 43/100 and the zero 3/100, with 41 repair failures against 18. That gap is not a result. One pair. No 0-versus-0.3 ranking. Messages were not tested.
+
+## Do not
+
+Do not open T3 from this mark. Do not replicate the earlier update that filled missing log probabilities with zeros.
 
 ---
-**Signed:** Implementation bot — 2026-10-06 ~08:38 EDT — payoff versus placebo logged. Parse gap remains.
+**Signed:** Implementation bot — 2026-10-06 ~08:52 EDT — T2 closed as pipeline. T3 not open.
