@@ -4,6 +4,7 @@
 **Design:** `notes/design-2026-10-03.md`
 **Plan:** `notes/2month-plan.md` (T3 closed until T2 is marked finished)
 **Spend:** $10 on Fireworks, stated by Nitesh. OpenRouter before that was $0.23.
+**Cap:** $40 hard, Fireworks. About $30 remaining.
 **Revision:** 6 Oct, after review. The trained gap is not a result. Do not replicate this update.
 
 ## Question
@@ -47,7 +48,7 @@ Messages were an empty inbox. That question is deferred, not dropped.
 
 T3 stays closed. Frozen-only is the wrong spend: the base model already names the high seat. Replicating the present update across three seeds is also the wrong spend.
 
-The claim, if T3 opens later, is that a trained policy names a visible high contributor and leaves out a visible zero more than frozen does, across three seeds. No 0-versus-0.3 ranking unless a seed separates them. No messages. A selectivity count sits beside it: nominations of the zero divided by nominations of model seats that contributed about 1. Fewer names overall is not a result. Stop after seed 1 if that contrast is inside the frozen range.
+The claim, if a later seed is bought, is that a trained policy names a visible high contributor and leaves out a visible zero more than frozen does. No 0-versus-0.3 ranking unless a seed separates them. No messages. A selectivity count sits beside it: nominations of the zero divided by nominations of model seats that contributed about 1. Fewer names overall is not a result. Stop after seed 1 if that contrast is inside the frozen range.
 
 ## Next block, before any seed
 
@@ -56,8 +57,8 @@ The claim, if T3 opens later, is that a trained policy names a visible high cont
 3. One placebo episode, shuffled or constant rewards. If a core still forms, the effect is drift.
 4. Paired measurement seeds, and a reload that does not 404.
 
-Graded probes at 0, 0.3, 0.7, and 1 wait until the step is interpretable. Eight seats stay. Messages stay off. Learning rate stays at 2.5e-5 until the ratio is real, then a smaller rate is the next knob.
+Graded probes at 0, 0.3, 0.7, and 1 wait until the step is interpretable. Eight seats stay. Messages stay off.
 
 ## Budget
 
-The $10 bought the smokes, two training episodes, and the files above. The log-probability smoke and the placebo are a few dollars. The $100 hard cap still covers three seeds after those pass. It does not cover 16 seats or a second game.
+The cap is $40, not $100. About $10 is already spent, so about $30 remains. The log-probability smoke is one sample. The placebo is one training episode, a few dollars at the rate so far. Three seeds may not fit in the remainder. Buy the smoke and the placebo first. A second seed waits until those are read and the remaining balance is known. The cap does not cover 16 seats or a second game.
