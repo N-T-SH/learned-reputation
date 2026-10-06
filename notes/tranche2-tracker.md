@@ -4,18 +4,19 @@
 **Opened:** 2026-10-01
 
 ## Status
-**OPEN.** Three frozen and three trained measurement episodes logged. One training episode. Do not open T3.
+**OPEN.** High-contributor frozen control logged. Trained control not started. Do not open T3.
 
 ## Log
 
 | Block | Result |
 |-------|--------|
-| Frozen measure | Seeds 11, 12, 13. Zero named 68/120, 28/120, 44/120. 0.3 named 42/120, 14/120, 42/120. Late zero named 24/30, 6/30, 4/30. |
-| Trained measure | `runs/train/measure_trained.jsonl`. Seeds 14, 15, 16. No steps during measurement. Zero named 0/120, 0/120, 2/120. 0.3 named 0/120, 0/120, 2/120. Late rounds named neither probe in all three. Model named model 352/600, 193/600, 299/600. Mean contribution 0.94, 0.92, 0.81. |
+| Frozen measure | Seeds 11–13. Zero named 68/120, 28/120, 44/120. 0.3 named 42/120, 14/120, 42/120. |
+| Trained measure | Seeds 14–16. Zero named 0/120, 0/120, 2/120. 0.3 named the same. Core group, not a ranking. |
+| High control, frozen | `runs/train/control_high_frozen.jsonl`. Seeds 21–23. Five model seats. High seat named 82/100, 75/100, 80/100. Zero named 12, 10, 10. 0.3 named 5, 8, 10. High seat in the working set 18, 17, 19 of 20 rounds. One repair failure each. No steps. |
 
 ## Next
 
-The gap is outside the frozen range. It is one training episode. Do not open T3.
+Run `python -m agents.train.control_high trained`. If the snapshot 404s, stop. Do not retrain. Do not open T3.
 
 ---
-**Signed:** Implementation bot — 2026-10-05 ~11:43 EDT — trained measurement almost never named either probe.
+**Signed:** Implementation bot — 2026-10-06 ~04:31 EDT — frozen control names the seat that contributes 1.
