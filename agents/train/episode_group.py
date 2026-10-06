@@ -1,8 +1,8 @@
 """Four complete episodes, one group. No held-fixed return.
 
-A missing log probability aborts the step. Placebo shuffles the four returns
-before the advantage. Default is two rounds, so the loop can be priced
-before a 20-round run.
+A missing log probability aborts the step. A seat's advantage is applied
+only to that seat's tokens. Placebo shuffles the four returns. Default is
+two rounds, so the loop can be priced before a 20-round run.
 """
 
 from __future__ import annotations
@@ -12,7 +12,6 @@ import os
 import random
 import string
 import sys
-from pathlib import Path
 
 from agents.train.prompt import rendered_prompt
 from envs.pgg_scripted.env import ScriptedPGG
@@ -43,7 +42,7 @@ def scripted(ids, probes, last):
     return actions
 
 
-async def sample_one(sampler, tokenizer, prompt_ids):
+async def sample_one(sampler, prompt_ids):
     completions = await sampler.sample_with_prompt_tokens(
         prompt_ids,
         n=1,
@@ -56,7 +55,8 @@ async def sample_one(sampler, tokenizer, prompt_ids):
     logprobs = completion.inference_logprobs
     if not logprobs or len(logprobs) < n_tokens:
         raise SystemExit("Missing log probabilities. No step.")
-    return completion, logprobs[:n_tokens]
+    completion_ids = completion.full_tokens[completion.prompt_len:]
+    return completion.text or "", completion_ids, logprobs[:n_tokens]
 
 
 def datum_for(prompt_ids, completion_ids, logprobs, advantage):
@@ -75,28 +75,6 @@ def datum_for(prompt_ids, completion_ids, logprobs, advantage):
     )
 
 
-def play_episode(sampler, tokenizer, ids, probes, seed, rounds):
-    env = ScriptedPGG(ids=ids, seed=seed)
-    records = []
-    returns = {i: 0.0 for i in ids}
-    for t in range(rounds):
-        last = env.history[-1]["c"] if env.history else {i: 0.0 for i in ids}
-        actions = scripted(ids, probes, last)
-        for seat in ids:
-            if seat in probes:
-                continue
-            text = rendered_prompt(tokenizer, seat, env, order_for(ids, seat, seed, t), [])
-            prompt_ids = tokenizer.encode(text)
-            completion, logprobs = asyncio.get_event_loop().run_until_complete(
-                sample_one(sampler, prompt_ids)
-            ) if False else None
-            # filled below by the async driver
-            records.append((seat, prompt_ids))
-        # placeholder so the sync shape is obvious; main uses the async driver
-        break
-    return env, records, returns
-
-
 async def episode(sampler, tokenizer, ids, probes, seed, rounds):
     env = ScriptedPGG(ids=ids, seed=seed)
     records = []
@@ -109,11 +87,10 @@ async def episode(sampler, tokenizer, ids, probes, seed, rounds):
                 continue
             text = rendered_prompt(tokenizer, seat, env, order_for(ids, seat, seed, t), [])
             prompt_ids = tokenizer.encode(text)
-            completion, logprobs = await sample_one(sampler, tokenizer, prompt_ids)
-            action, ok = repair(parse_model_text(completion.text or ""), ids)
+            raw, completion_ids, logprobs = await sample_one(sampler, prompt_ids)
+            action, ok = repair(parse_model_text(raw), ids)
             actions[seat] = action
-            completion_ids = completion.full_tokens[completion.prompt_len:]
-            records.append((prompt_ids, completion_ids, logprobs))
+            records.append((seat, prompt_ids, completion_ids, logprobs))
         contrib = {i: actions[i]["contribute"] for i in ids}
         noms = {i: actions[i]["nominate"] for i in ids}
         pay = env.payoffs(contrib, env.working)
@@ -154,21 +131,24 @@ async def main_async() -> None:
     for g in range(4):
         records, returns = await episode(client.deployment_sampler, tokenizer, ids, probes, 30, rounds)
         group.append((records, returns))
-        print("episode", g, "returns", {k: round(v, 3) for k, v in returns.items()}, flush=True)
-    model = [i for i in ids if i not in probes]
+        print("episode", g, "model_returns", {k: round(v, 3) for k, v in returns.items() if k not in probes}, flush=True)
     datums = []
-    for seat in model:
+    for seat in ids:
+        if seat in probes:
+            continue
         values = [item[1][seat] for item in group]
-        order = list(values)
+        scored = list(values)
         if placebo:
-            random.Random(0).shuffle(order)
-        mean = sum(order) / len(order)
-        advantages = [value - mean for value in order]
+            random.Random(0).shuffle(scored)
+        mean = sum(scored) / len(scored)
+        advantages = [value - mean for value in scored]
         if len(set(round(a, 6) for a in advantages)) == 1:
             print("seat", seat, "no spread", flush=True)
             continue
         for (records, _), advantage in zip(group, advantages):
-            for prompt_ids, completion_ids, logprobs in records:
+            for owner, prompt_ids, completion_ids, logprobs in records:
+                if owner != seat:
+                    continue
                 datums.append(datum_for(prompt_ids, completion_ids, logprobs, advantage))
         print("seat", seat, "advantages", [round(a, 3) for a in advantages], flush=True)
     if not datums:
