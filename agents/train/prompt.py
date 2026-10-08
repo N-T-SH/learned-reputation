@@ -10,7 +10,12 @@ from __future__ import annotations
 def rendered_prompt(tokenizer, seat: str, env, order: list[str], inbox: list[str]) -> str:
     from envs.pgg_scripted.run_frozen import prompt_for
 
-    messages = [{"role": "user", "content": prompt_for(seat, env, order, inbox)}]
+    body = prompt_for(seat, env, order, inbox)
+    body += (
+        "\nReply with only the JSON object. nominate is a list of seat ids. "
+        "contribute is a number. Keep the message under ten words."
+    )
+    messages = [{"role": "user", "content": body}]
     try:
         return tokenizer.apply_chat_template(
             messages,
