@@ -1,82 +1,81 @@
-# Project report — 7 Oct 2026
+# Learned reputation without a reputation score
 
+**Project report, 7 October 2026**
 **Repo:** `N-T-SH/learned-reputation`
-**Design:** `notes/design-2026-10-03.md`
-**Plan:** `notes/2month-plan.md`
-**Status:** T2 finished as a pipeline tranche. PI no-go for now. T3 is not open.
-**Spend:** about $10 on Fireworks. Cap $40. About $30 left. OpenRouter before that was $0.23.
+**Status:** Stopped. The PI said no-go. No further Fireworks runs are recommended. About $10 of a $40 cap was spent.
 
-## Decision
+This note is written for a reader who has not been in the lab thread. It says what was asked, what was built, what the files show, and why the work stops here.
 
-The PI no-go is the right call on these files. The trainer runs. The comparison that would justify three seeds does not. Closing T2 does not reverse that. A later go needs a paired frozen file on the same ids, a parse rate low enough to read, and a payoff-versus-placebo gap that survives both. None of those three are in hand.
+## The question
 
-## Question
+The project asks whether a group of language-model agents can learn whom to include, from the payoffs of a public-goods game, without being given a reputation score.
 
-The design asks whether a trained policy uses the public ledger when it nominates, and whether that differs from the same model frozen. A result would be a scripted free rider named less often after training, and higher contributions among the seats that remain. It is not a 0-versus-0.3 ranking. It is not emergent reputation.
+Each agent has one unit. It can put some or all of that unit into a shared pot, and it can name other agents as partners. A partnership exists only if both sides name each other. The pot of a group of at least two is multiplied by 1.6 and split equally. An agent left out, or left alone, gets 0.8. Naming a partner who contributes, and being named back, pays. Naming a free rider, or contributing while being left out, does not.
 
-Three outcomes were named in review, and all three stay in the analysis plan:
+The design does not put a reputation number in the prompt. It does not tell the model to exclude anyone. What the model sees is a ledger: the last five rounds of every seat's contribution and nominations, with the labels shuffled so that position in the list is not a seat identity. If inclusion tracks contribution, that has to come from the ledger and from the payoff.
 
-- Sharper exclusion: the trained policy names a visible high contributor and leaves out a visible zero more than frozen does.
-- Closure: the trained policy names fewer seats and leaves model seats out with the probes. This is a result, not a failed run.
-- Unchanged prior: training does not move the frozen preference.
+A result, in the design note of 3 October, would be a scripted free rider named less often after training than before, and higher contributions among the seats that remain. A ranking of a zero contribution against a 0.3 contribution was not required. A claim of emergent reputation was not required.
 
-## What was built
+Review added two other outcomes, so that a negative or a different result would still be a result:
 
-Eight seats. One unit each. Contribution in [0, 1]. A working set of at least two splits 1.6 times the sum. A lone seat gets 0.8. A pair exists only if both name each other. The prompt is the last five rounds of every seat's contribution and nominations, labels shuffled per seat. No reputation score. No game-theory words. Thinking off. Qwen 3.8 27B on Fireworks. Temperature 0.4.
+- Sharper exclusion. After training, a visible high contributor is named more, and a visible zero is named less, than by the same model with no training.
+- Closure. After training, the policy names fewer seats and leaves some model seats out along with the probes. That is a real pattern. It is not the reputation result.
+- Unchanged prior. Training does not move what the frozen model already does.
 
-The training path that can be interpreted is the later one. Four complete episodes share a starting id list. The score is each seat's return over the episode. Other seats are not held fixed. Log probabilities are requested and the step aborts if they are missing. A placebo shuffles those returns before the advantage. Measurement finishes in the same process, because a fresh process cannot reload a snapshot.
+## The game, in one pass
 
-The earlier path should not be cited as training. It filled missing log probabilities with zeros, held other seats fixed, and measured frozen and trained on different seeds.
+Eight seats. Five are copies of the model. Three are scripted, so their behavior is known. One always contributes 0. One always contributes 0.3. One always contributes 1. Each scripted seat names the two highest contributors from the previous round. The model seats reply with a short message, a list of partner ids, and a contribution between 0 and 1. A reply that cannot be parsed is repaired to an empty nomination and a contribution of 0, and counted as a failure.
 
-## Evidence
+The model is Qwen 3.8 27B, thinking off, temperature 0.4, through Fireworks. The comparison that can be read is Fireworks against Fireworks. An earlier OpenRouter file used a different endpoint and a plain prompt. It is not the before picture for these runs.
 
-Frozen seats, seeds 11–13, probes at 0 and 0.3, no step: the zero was named 68, 28, and 44 times out of 120. The spread across three episodes is already large.
+## What training was supposed to do
 
-Frozen control, seeds 21–23, a third seat at 1: the high seat was named 82, 75, and 80 times out of 100. The zero was named 12, 10, and 10. The base model already prefers a visible 1. That is the before picture. It does not need a training claim attached to it.
+The training method is a group-relative policy update. Several rollouts are scored. A rollout that scores above the group mean is reinforced. One that scores below it is not. The score is the seat's own payoff from the decision to the end of the episode, not a reputation bonus.
 
-The old trained snapshot, seeds 14–16, named the zero 0, 0, and 2 times out of 120 and also dropped model seats. The high-seat control on that snapshot named the high seat 86, 77, and 85 times out of 100, in line with frozen. That update is not interpretable. It is not the arm to replicate.
+The first attempt did not implement that. Log probabilities were often missing and were replaced with zeros, so the importance ratio was one for every token. The return held the other seats' later actions fixed, so a reply that contributed nothing was never dropped in the counterfactual. What that return could pay was naming seats that were already naming you, because a pair needs both sides. That predicts a clique. Those files are kept. They are not cited as a training effect.
 
-The interpretable pair is one payoff group and one placebo group, seed 40, twenty rounds, measurement in the same process.
+The later attempt fixed both points. Four complete episodes shared a starting list of ids. The score was each seat's payoff over the whole episode, so other seats could react. Log probabilities were requested, and the step aborted if they were missing. A placebo arm shuffled the four returns before the advantage, so a step still ran, but it was not paid by the game. Measurement had to finish in the same process. A fresh process cannot reload a saved snapshot: the call returns 404.
 
-| Arm | High named | Zero named | 0.3 named | Names per reply | Repair failures | Mean contribution |
-|---|---|---|---|---|---|---|
-| Payoff | 73/100 | 1/100 | 1/100 | 1.76 | 18 | 0.55 |
-| Placebo | 43/100 | 3/100 | 11/100 | 1.05 | 41 | 0.31 |
+## What the frozen model already does
 
-The payoff file names the high seat more than the placebo file. It also fails repair less often. A failed reply is repaired to an empty nomination and a contribution of 0, so the gap can be a parse gap. Two model seats in the payoff file were named 42 and 46 times. Three were named 3, 3, and 7. A core is still there. There is no frozen episode on these ids. The earlier frozen control, on other ids, already named the high seat about 80 times out of 100. The payoff rate of 73 may be the prior.
+Before any interpretable training, the frozen model preferred a seat that contributes 1.
 
-A fresh process returned 404 on the saved snapshot. Measurement has to finish before the process exits. A run that dies after the step loses the measurement.
+On three episodes with new ids, the high scripted seat was named 82, 75, and 80 times out of 100. The zero was named 12, 10, and 10. The 0.3 seat was named 5, 8, and 10. The base model already tells a visible 1 from a visible 0. It does not cleanly rank 0 below 0.3. That preference is the prior. Training has to move it, not rediscover it.
 
-Messages were an empty inbox. That question is deferred, not dropped. Eight seats stay. Sixteen seats stay out.
+An earlier frozen file, with only the 0 and 0.3 probes, named the zero 68, 28, and 44 times out of 120. Three episodes on the same setup do not agree with each other. One episode is not a rate.
 
-## Why this is a no-go
+## The comparison that decides it
 
-The plan-bot review asked not to buy three seeds of an update that cannot be read. That still holds for the old path. The new path fixed the log probabilities and the held-fixed return, and it added a placebo. It did not fix the parse rate, the missing same-id frozen file, or the reload. One pair with 41 placebo repair failures is not a seed to scale.
+One id list, seed 40. Probes `7eknaf` at 0, `s3kn51` at 0.3, `ojtk7t` at 1. Twenty rounds. Five model seats, so each probe can be named 100 times.
 
-A future go would need all three of these, in this order:
+| Arm | What it is | High named | Zero named | 0.3 named | Names per reply | Repair failures | Mean contribution |
+|---|---|---|---|---|---|---|---|
+| Frozen | No step. `runs/train/long_frozen_seed40.jsonl` | 69 | 2 | 0 | 1.56 | 17 | 0.66 |
+| Payoff | Four episodes, scored by the game, then one measurement episode. `runs/train/long_payoff.jsonl` | 73 | 1 | 1 | 1.76 | 18 | 0.55 |
+| Placebo | Same group, returns shuffled. `runs/train/long_placebo.jsonl` | 43 | 3 | 11 | 1.05 | 41 | 0.31 |
 
-1. A frozen episode on the same ids as the trained file, no step. If it already names the high seat about 70 times out of 100, the payoff step did not move the prior.
-2. Repair failures under about 5 out of 100 on frozen and on both trained arms. Otherwise selectivity is a parse count.
-3. A payoff-versus-placebo gap on those same ids that remains after the parse rate is low. Stop if the high-versus-zero contrast sits inside the frozen range.
+The payoff file and the frozen file are the same episode. The high seat moves from 69 to 73. The zero moves from 2 to 1. Repair failures are 17 and 18. Names per reply are 1.56 and 1.76. That is not a trained change.
 
-Closure stays a named outcome. Fewer names per reply, with model seats left out beside the probes, is reported as closure. It is not counted as sharper exclusion.
+The placebo file is worse. The high seat falls to 43. Names per reply fall to 1.05. Repair failures rise to 41. A failed reply is replaced with an empty nomination, so some of that drop is a parse failure. A shuffled return did not teach exclusion. It made the policy worse at producing a readable action.
 
-## Leftover cap
+Both trained files still form uneven groups among the model seats. After the payoff step, two model seats were named 42 and 46 times and three were named 3, 3, and 7. After no step, the same seats were named 30, 25, 4, 20, and 6. A core is in the frozen file too. Training did not create it.
 
-About $30 remains. Do not buy another 20-round training group until the two cheap checks are read. A training group is about 400 samples plus 100 measurement samples. Two of those already fit in the $10. A third, with the same parse rate, would spend the chance to answer the missing question.
+## What was ruled out
 
-Spend in this order.
+The old trained files, seeds 14 to 16, named the zero 0, 0, and 2 times out of 120, against a frozen range of 28 to 68. That gap was outside the frozen spread. It came from an update with zero log probabilities and a return that could not see a later exclusion. The high-seat control on that snapshot named the high seat about as often as the frozen model. Those files show closure from an uninterpretable step. They are not replicated.
 
-1. Frozen episode on seed 40, the ids in `runs/train/long_payoff.jsonl`. No step. One hundred model replies. Print named zero, named high, names per reply, and repair failures. This is the missing before picture for the only interpretable pair. If the high seat is already near 73, training did not do the thing the payoff file appeared to do.
-2. One frozen episode at temperature 0.2, new ids, same probes. Count repair failures. If they fall from the 18–41 range to near zero, a later train is readable. If they do not, the prompt or the parser is the next fix, and that fix does not need Fireworks.
-3. Stop and write the numbers into this note. Only if the frozen seed-40 file is clearly below the payoff file, and the low-temperature parse rate is low, spend the rest on one placebo group at that temperature, measurement in the same process. If either check fails, do not spend the rest.
+Messages were in the design and were passed as an empty inbox. Nothing in these files says whether a message changes a nomination. That question is deferred, not dropped.
 
-A graded frozen episode, probes at 0, 0.3, 0.7, and 1, is the optional third file if the first two are cheap. It documents the prior. It does not train. It does not reopen T3.
+A saved adapter cannot be sampled in a new process. The measurement episodes exist because they finished before the process exited.
 
-What the leftover cap cannot buy: a reload that works in a new process, a 16-seat arm, a message arm, or three seeds.
+## Why the no-go follows
 
-## Next steps that do not need the cap
+The PI no-go matches the files. The thing a further seed would have to show is a payoff arm that names the high seat more, and the zero less, than a frozen arm on the same ids, with a parse rate low enough to read, and a placebo that does not copy the gap. The same-id frozen file removes the gap. Spending the remaining cap on another training group would buy another copy of the prior, or another damaged placebo.
 
-Write the no-go sentence into `notes/t2-gate.md` and leave T3 closed. Keep the three outcomes in the analysis plan. Tabulate repair failures in the payoff and placebo files: empty output, non-JSON, unknown ids. That table is the confound a reviewer will ask for. Do not cite the zero-filled update as a trained effect.
+No further runs are recommended. A low-temperature parse check would not change the decision. The stop rule was the seed-40 frozen file, and it has been read.
 
-A later proposal, if the cheap checks are kind, is one seed at a parse rate that can be read, with a same-id frozen file and a placebo, under the remaining cap. It is not T3. T3 remains three seeds, a message check, and a main analysis, and it waits on a go.
+## What a later go would need
+
+A later proposal is not this tranche reopened. It would need a parser or a prompt that fails on fewer than about 5 replies out of 100, a frozen episode on the same ids as the trained episode, and a placebo that does not itself destroy the output. Eight seats stay. Messages stay off until that comparison exists. Sixteen seats stay out. The claim, if any, is sharper exclusion against the frozen prior. Closure and an unchanged prior remain named outcomes.
+
+The pipeline can be reused. `agents/train/long_group.py` is the payoff and placebo path. `agents/train/frozen_seed40.py` is the same-id frozen path. `agents/train/logprob_smoke.py` is the check that log probabilities came back. The 7 October note and this file are the record.
