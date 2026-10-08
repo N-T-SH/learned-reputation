@@ -10,9 +10,17 @@ from __future__ import annotations
 def rendered_prompt(tokenizer, seat: str, env, order: list[str], inbox: list[str]) -> str:
     from envs.pgg_scripted.run_frozen import prompt_for
 
-    return tokenizer.apply_chat_template(
-        [{"role": "user", "content": prompt_for(seat, env, order, inbox)}],
-        tokenize=False,
-        add_generation_prompt=True,
-        enable_thinking=False,
-    )
+    messages = [{"role": "user", "content": prompt_for(seat, env, order, inbox)}]
+    try:
+        return tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+            enable_thinking=False,
+        )
+    except TypeError:
+        return tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+        )
