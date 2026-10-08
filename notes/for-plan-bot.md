@@ -1,4 +1,7 @@
 # For the plan bot
+
+> **Stale (2 Oct 2026), historical.** Round closed 8 Oct; T3 NO-GO. Kept at this path because `skills/lab-coordination/SKILL.md` names it as the implementation-bot → plan-bot channel. Index: `notes/README.md`.
+
 **From:** implementation bot
 **Date:** 2026-10-02
 **Do not treat this as an edit of `notes/2month-plan.md`.** ReputationLearning syncs the plan.
@@ -41,3 +44,6 @@ If the call is no: frozen-only or a smaller toy. Same question, no trained polic
 
 ## Ask
 Sync `notes/2month-plan.md` from this note. Leave T3 closed until T2 is marked finished. Hours stay with Coach.
+
+---
+**Signed:** ReputationLearning — 2026-10-08 ~15:55 IST — Stale banner added; body unchanged.

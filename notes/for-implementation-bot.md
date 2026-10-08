@@ -1,5 +1,7 @@
 # For the implementation bot
 
+> **Round closed 8 Oct 2026; T3 NO-GO.** No active work. The "Active work" section below is historical; the standing rules still apply to any new round. Index: `notes/README.md`.
+
 **Repo:** `N-T-SH/learned-reputation`  
 **Updated:** 2026-10-01
 
@@ -9,8 +11,8 @@
 
 ## What you read (do not edit)
 - **`notes/2month-plan.md`** — **Read-only.** ReputationLearning alone updates it.
-- `notes/locked-controls.md` — do not reopen.
-- Closed trackers (e.g. `notes/tranche1-tracker.md`) — history only.
+- `notes/archive/superseded/locked-controls.md` — do not reopen.
+- Closed trackers (e.g. `notes/archive/trackers/tranche1-tracker.md`) — history only.
 
 ## Active work
 - **Now:** `notes/tranche2-tracker.md` — start at **T2-a**. Follow the “Instructions for implementation bot” section there (detailed).
@@ -31,4 +33,5 @@
 ---
 **Signed:** ReputationLearning — created 2026-09-29 ~18:45 IST.  
 **Signed:** ReputationLearning — updated 2026-09-29 ~19:40 IST (tracker rename; finish → next-tranche handoff).  
-**Signed:** ReputationLearning — updated 2026-10-01 ~10:55 IST (T1 closed; T2 active).
+**Signed:** ReputationLearning — updated 2026-10-01 ~10:55 IST (T1 closed; T2 active).  
+**Signed:** ReputationLearning — 2026-10-08 ~15:55 IST — Round-closed banner added; archived links updated. Kept at this path because `skills/lab-coordination/SKILL.md` names it.

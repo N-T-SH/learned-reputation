@@ -19,3 +19,10 @@ The frozen model refuses a clearly low contribution. It does not rank 0 against 
 Do not train on the older no-ledger file. Do not score a decision with that round's payoff alone. The reward is the seat's return from that round to the end of the episode.
 
 Next is a Fireworks smoke on Qwen 3.8 27B: thinking off, one short GRPO step, reward equal to return-to-go. Not a full pilot until that smoke prices and parses.
+
+## Decision — 8 Oct 2026
+
+**NO-GO on T3 (Nitesh + PI).** The seed-40 comparison showed one valid update did not move the frozen prior. Round closed; ~$10 of $40 spent, remainder not reused. Do not open `tranche3-tracker.md`. See `project-report-2026-10-07.md` and `2month-plan.md` (Round status — CLOSED). A later round is a new proposal, not T3 reopened.
+
+---
+**Signed:** ReputationLearning — 2026-10-08 ~15:55 IST — Recorded the T3 NO-GO (Nitesh + PI); round closed. Body above unchanged.

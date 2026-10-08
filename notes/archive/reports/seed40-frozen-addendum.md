@@ -1,3 +1,5 @@
+> **Archived 8 Oct 2026** — see `notes/README.md`. Body below unchanged except link fixes.
+
 # Seed 40 frozen addendum — 7 Oct 2026
 
 Same ids as `runs/train/long_payoff.jsonl`. No step. Console line, file not yet on the remote when this note was written.

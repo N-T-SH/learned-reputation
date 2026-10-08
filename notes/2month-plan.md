@@ -15,7 +15,8 @@
 |------|------------|------|
 | `notes/2month-plan.md` (this file) | **ReputationLearning only** | Pull → update from all available info → sign → push. Implementation bot has **read access only**. |
 | Active tranche tracker (e.g. `notes/tranche2-tracker.md`) | **Both** ReputationLearning and implementation bot | Each pulls before edit; appends substance; **signs at the bottom** with bot name + timestamp; pushes. Do not overwrite the other bot’s signed lines without a clear supersession note. |
-| `notes/locked-controls.md` | Lab lock / ReputationLearning | Implementation bot reads; does not reopen locks. |
+| `notes/README.md` | ReputationLearning | Index of every notes file with status. Update it when a note is added or archived. |
+| `notes/archive/superseded/locked-controls.md` | Lab lock / ReputationLearning | **Archived** 8 Oct; superseded by `notes/design-2026-10-03.md`. History only. |
 | `notes/for-plan-bot.md` | Implementation bot → plan bot | Pace / remaining-hours signal. Not a plan edit. |
 | `envs/`, `runs/`, README run paths | Implementation bot | ReputationLearning does not code or scaffold. |
 
@@ -49,10 +50,10 @@ Coach owns calendar rematches. If Lab holds are shorter than the 24h estimate, w
 | Site / code home | GitHub `N-T-SH/learned-reputation` |
 | Cuts | No reasoning-mode **training**; exploitation probe → future work |
 | Tabular Ueshima recreate | Optional intuition only — not a product milestone |
-| T1 scripted PGG + schema/repair + dry tokens | **FINISHED** 1 Oct (`notes/tranche1-tracker.md`) |
+| T1 scripted PGG + schema/repair + dry tokens | **FINISHED** 1 Oct (`notes/archive/trackers/tranche1-tracker.md`) |
 | T2 FakeLM / Ling smoke, prompt checklist, choice vs fixed log | **Done** 2 Oct (real model = Ling/Qwen; FakeLM was smoke only — no science claims from FakeLM) |
 | T2-d reasoning toggle as study aim | **Skipped** by Nitesh (2 Oct). Comparison model must still accept reasoning off. |
-| Design review + frozen technical report | **Done** 3 Oct (`notes/design-2026-10-03.md`, `notes/technical-report-2026-10-03.md`): public five-round ledger, lone seat gets 0.8, shuffled per-episode ids, return-to-go reward, stay at N=8. |
+| Design review + frozen technical report | **Done** 3 Oct (`notes/design-2026-10-03.md`, `notes/archive/reports/technical-report-2026-10-03.md`): public five-round ledger, lone seat gets 0.8, shuffled per-episode ids, return-to-go reward, stay at N=8. |
 | N=8 frozen ledger probe file + gate note | **Done** 5 Oct. Qwen 3.8 27B, t=0.4, 5 episodes × 20 rounds, probes at 0 and 0.3. Model seats named the zero probe 15/570 and the 0.3 probe 21/570; only 3/600 model contributions below 0.5. Gate call: frozen refuses a clearly low contribution but does not rank 0 vs 0.3; good enough as the before picture (`notes/t2-gate.md`). |
 | Training path | **Exists.** Fireworks serverless LoRA (rank 8) GRPO on Qwen 3.8 27B, thinking off, group of 4 replies, reward = return-to-go (`notes/grpo-step-mechanics.md`). Smoke + return-to-go, frozen-prompt and chat-prompt pilots run 4–5 Oct. |
 | T2 deciding comparison | **Done** 8 Oct. Seed 40, same ids: one valid update did not move the frozen prior (high 69→73, zero 2→1, repair failures 17 vs 18). Project report: `notes/project-report-2026-10-07.md` (dated 8 Oct). |
@@ -119,7 +120,7 @@ The original <$25 pilot cap was raised to a $40 cap on 6 Oct; ~$10 was spent. Ar
 |---|----------|---------------|
 | 1 | Project report (memo for a new reader) | `notes/project-report-2026-10-07.md` (dated 8 Oct). Exists. |
 | 2 | Seed-40 untrained / trained / placebo table | In the report; files `runs/train/long_frozen_seed40.jsonl`, `long_payoff.jsonl`, `long_placebo.jsonl`. Exists. |
-| 3 | Cost ledger | ~$10 of $40 (report + `notes/technical-report-2026-10-06.md`). A standalone itemised ledger is not written. |
+| 3 | Cost ledger | ~$10 of $40 (report + `notes/archive/reports/technical-report-2026-10-06.md`). A standalone itemised ledger is not written. |
 | 4 | Broken-update caution | Possible short note: the seeds 14–16 freeze-out vs frozen baselines, framed as a methods caution. Not written. |
 | 5 | Later-round ask | The sketch above; would become the PI-facing ask if a new proposal is pursued. |
 
@@ -157,9 +158,9 @@ The 2 Oct "T2 remaining sequence", the "T2-end decision (GPU vs frozen-only)", t
 
 ## Locks (carry — do not reopen)
 
-From `notes/locked-controls.md` + T2 tracker:
+From `notes/archive/superseded/locked-controls.md` + T2 tracker:
 
-1. Visibility: **public five-round ledger** (every seat's contribution and nominations, shuffled label order) + messages to me from the previous round (inbox was empty in all runs). Supersedes **local** per the 3 Oct design review; `notes/locked-controls.md` now carries a superseded banner (8 Oct).
+1. Visibility: **public five-round ledger** (every seat's contribution and nominations, shuffled label order) + messages to me from the previous round (inbox was empty in all runs). Supersedes **local** per the 3 Oct design review; `notes/archive/superseded/locked-controls.md` now carries a superseded banner (8 Oct).
 2. Groups: **bilateral form / unilateral break** (mutual nominate).
 3. Units: **y=1**, scripted threshold **0.5**, **r=1.6**, isolation **0.8**; a lone seat also gets **0.8** (a one-seat pot is not a group).
 4. **N=8** for frozen and trained (N=4 files are history). Same model (Qwen 3.8 27B), same Fireworks chat prompt, thinking off. 16 seats is a later robustness check.
@@ -214,3 +215,4 @@ From `notes/locked-controls.md` + T2 tracker:
 **Signed:** ReputationLearning — updated 2026-10-05 ~19:55 IST (evening sync: N=8 ledger frozen file + `t2-gate.md` done; Fireworks train path exists; smoke + pilots + first frozen/trained 20-round pair logged, not a result; next is the held-out measurement, artifacts, go/no-go; locks updated to public ledger, lone seat 0.8, N=8, return-to-go; `locked-controls.md` flagged stale; T3 still closed; hours Coach-side).
 **Signed:** ReputationLearning — updated 2026-10-06 ~19:55 IST (evening sync: T2 FINISHED as a pipeline tranche per implementation bot; T3 tracker deliberately not opened pending Nitesh + PI go/no-go; $40 Fireworks cap, ~$10 spent; reload 404 and placebo-vs-payoff gap carried as not-closed; hours Coach-side).
 **Signed:** ReputationLearning — 2026-10-08 ~15:50 IST — Round closed 8 Oct: T2 finished, T3 NO-GO (Nitesh + PI), ~$10 of $40 spent and remainder not reused; claims, later-round sketch (not scheduled), and funding artifacts synced from the 8 Oct project report; old T3/next-run steps marked superseded.
+**Signed:** ReputationLearning — 2026-10-08 ~15:55 IST — Notes tidy: link paths updated for files moved to `notes/archive/`; `notes/README.md` index added to the workflow table. No plan content changed.

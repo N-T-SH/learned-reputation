@@ -1,5 +1,7 @@
+> **Archived 8 Oct 2026** — see `notes/README.md`. Body below unchanged except link fixes.
+
 # T1 tracker — scripted PGG pipeline
-**Path:** `notes/tranche1-tracker.md`  
+**Path:** `notes/archive/trackers/tranche1-tracker.md`  
 **Repo:** `N-T-SH/learned-reputation`  
 **Pacing:** tranches, not calendar weeks.
 

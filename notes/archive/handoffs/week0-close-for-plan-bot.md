@@ -1,3 +1,5 @@
+> **Archived 8 Oct 2026** — see `notes/README.md`. Body below unchanged except link fixes.
+
 # Plan-bot update — Week 0 closed (Tue 29 Sep 2026)
 **For:** ResilientBots / plan Grok updating `resilient-lab-2month-30h-plan.md`
 **From:** Nitesh + web Grok

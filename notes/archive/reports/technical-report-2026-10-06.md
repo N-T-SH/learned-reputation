@@ -1,3 +1,5 @@
+> **Archived 8 Oct 2026** — see `notes/README.md`. Body below unchanged except link fixes.
+
 # Technical report — 6 Oct 2026
 
 **Repo:** `N-T-SH/learned-reputation`
