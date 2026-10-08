@@ -15,9 +15,10 @@ import sys
 from pathlib import Path
 
 from agents.train.episode_group import datum_for, episode, stable_ids
+from agents.train.parse_reply import parse_reply
 from agents.train.prompt import rendered_prompt
 from envs.pgg_scripted.env import ScriptedPGG
-from envs.pgg_scripted.run_frozen import order_for, parse_model_text
+from envs.pgg_scripted.run_frozen import order_for
 from envs.pgg_scripted.schema import repair
 
 
@@ -41,7 +42,7 @@ async def measure(sampler, tokenizer, ids, probes, seed, path: Path):
     rows = []
     for t in range(20):
         last = env.history[-1]["c"] if env.history else {i: 0.0 for i in ids}
-        actions, oks = {}, {}
+        actions, oks, heads = {}, {}, {}
         for seat, value in probes.items():
             others = [i for i in ids if i != seat]
             actions[seat] = {
@@ -50,17 +51,27 @@ async def measure(sampler, tokenizer, ids, probes, seed, path: Path):
                 "contribute": value,
             }
             oks[seat] = True
+            heads[seat] = ""
         for seat in ids:
             if seat in probes:
                 continue
             text = rendered_prompt(tokenizer, seat, env, order_for(ids, seat, seed, t), [])
             prompt_ids = tokenizer.encode(text)
             completions = await sampler.sample_with_prompt_tokens(
-                prompt_ids, n=1, max_tokens=80, temperature=0.4, logprobs=True
+                prompt_ids, n=1, max_tokens=160, temperature=0.4, logprobs=True
             )
-            action, ok = repair(parse_model_text(completions[0].text or ""), ids)
-            actions[seat], oks[seat] = action, ok
-        row = {"t": t, "seed": seed, "ids": ids, "probes": probes, "ok": oks, "action": actions}
+            raw = completions[0].text or ""
+            action, ok = repair(parse_reply(raw), ids)
+            actions[seat], oks[seat], heads[seat] = action, ok, raw[:160]
+        row = {
+            "t": t,
+            "seed": seed,
+            "ids": ids,
+            "probes": probes,
+            "ok": oks,
+            "action": actions,
+            "text_head": heads,
+        }
         rows.append(row)
         with path.open("a") as handle:
             handle.write(json.dumps(row) + "\n")
@@ -121,7 +132,7 @@ async def main_async() -> None:
         if len(set(round(a, 6) for a in advantages)) == 1:
             continue
         for (records, _), advantage in zip(group, advantages):
-            for owner, prompt_ids, completion_ids, logprobs in records:
+            for owner, prompt_ids, completion_ids, logprobs, _raw, _ok in records:
                 if owner == seat:
                     datums.append(datum_for(prompt_ids, completion_ids, logprobs, advantage))
     if not datums:
