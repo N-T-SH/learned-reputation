@@ -1,7 +1,8 @@
 """Action schema for a seat. This module is the only door into the env.
 
 allowed may be a seat count, or the ids for this episode.
-A 6-character label is a valid id. Broken text must not become an action.
+A 6-character label is a valid id. A missing message, a null nominate, or a
+numeric string can be recovered. A reply with no object still fails closed.
 """
 
 from __future__ import annotations
@@ -24,12 +25,26 @@ def repair(raw, allowed) -> tuple[dict, bool]:
     ids = allowed_ids(allowed)
     if not isinstance(raw, dict):
         return (empty_action(), False)
-    if "message" not in raw or not isinstance(raw["message"], str):
-        return (empty_action(), False)
+    message = raw.get("message", "")
+    if message is None:
+        message = ""
+    if not isinstance(message, str):
+        message = str(message)
     noms = raw.get("nominate")
-    if not isinstance(noms, list) or not all(isinstance(x, (int, str)) and not isinstance(x, bool) for x in noms):
+    if noms is None or noms is False:
+        noms = []
+    elif isinstance(noms, str):
+        noms = [part for part in noms.replace(",", " ").split() if part]
+    elif not isinstance(noms, list) or not all(
+        isinstance(x, (int, str)) and not isinstance(x, bool) for x in noms
+    ):
         return (empty_action(), False)
     contrib = raw.get("contribute")
+    if isinstance(contrib, str):
+        try:
+            contrib = float(contrib)
+        except ValueError:
+            return (empty_action(), False)
     if (
         not isinstance(contrib, (int, float))
         or isinstance(contrib, bool)
@@ -41,6 +56,6 @@ def repair(raw, allowed) -> tuple[dict, bool]:
         if x in ids and x not in kept:
             kept.append(x)
     return (
-        {"message": raw["message"][:MSG_CAP], "nominate": kept, "contribute": float(contrib)},
+        {"message": message[:MSG_CAP], "nominate": kept, "contribute": float(contrib)},
         True,
     )
