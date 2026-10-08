@@ -13,9 +13,10 @@ import random
 import string
 import sys
 
+from agents.train.parse_reply import parse_reply
 from agents.train.prompt import rendered_prompt
 from envs.pgg_scripted.env import ScriptedPGG
-from envs.pgg_scripted.run_frozen import order_for, parse_model_text
+from envs.pgg_scripted.run_frozen import order_for
 from envs.pgg_scripted.schema import repair
 
 
@@ -46,7 +47,7 @@ async def sample_one(sampler, prompt_ids):
     completions = await sampler.sample_with_prompt_tokens(
         prompt_ids,
         n=1,
-        max_tokens=80,
+        max_tokens=160,
         temperature=0.4,
         logprobs=True,
     )
@@ -88,9 +89,9 @@ async def episode(sampler, tokenizer, ids, probes, seed, rounds):
             text = rendered_prompt(tokenizer, seat, env, order_for(ids, seat, seed, t), [])
             prompt_ids = tokenizer.encode(text)
             raw, completion_ids, logprobs = await sample_one(sampler, prompt_ids)
-            action, ok = repair(parse_model_text(raw), ids)
+            action, ok = repair(parse_reply(raw), ids)
             actions[seat] = action
-            records.append((seat, prompt_ids, completion_ids, logprobs))
+            records.append((seat, prompt_ids, completion_ids, logprobs, raw, ok))
         contrib = {i: actions[i]["contribute"] for i in ids}
         noms = {i: actions[i]["nominate"] for i in ids}
         pay = env.payoffs(contrib, env.working)
@@ -146,7 +147,7 @@ async def main_async() -> None:
             print("seat", seat, "no spread", flush=True)
             continue
         for (records, _), advantage in zip(group, advantages):
-            for owner, prompt_ids, completion_ids, logprobs in records:
+            for owner, prompt_ids, completion_ids, logprobs, _raw, _ok in records:
                 if owner != seat:
                     continue
                 datums.append(datum_for(prompt_ids, completion_ids, logprobs, advantage))
