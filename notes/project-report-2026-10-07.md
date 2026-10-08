@@ -2,7 +2,8 @@
 
 **Project report, 8 October 2026**
 **Repo:** `N-T-SH/learned-reputation`
-**Status:** This round stops. The PI said no-go. About $10 of a $40 Fireworks cap was spent. No further runs are recommended in this round.
+**Status:** This round stops. The PI said no-go. About $10 of a $40 Fireworks cap was spent. No further runs in this round.
+**Signed:** Implementation bot, 8 October 2026. Local parse check `parse_ok 5`. Round closed.
 
 This note is for a reader who was not in the lab thread. It says what was asked, what was built, what the files show, and what can be claimed. The deciding comparison has been run.
 
@@ -24,7 +25,7 @@ A result, in the design note of 3 October, would be a scripted free rider named 
 
 Three outcomes stay in the analysis plan:
 
-- Sharper exclusion. After training, a visible high contributor is named more, and a visible zero is named less, than by the same model with no training.
+- Sharper exclusion. After training, a visible high contributor is named more, and a visible zero is named less, than by the same model with no training. A drop in names per reply is not this result. The count that matters is nominations of the zero divided by nominations of model seats that contributed about 1.
 - Closure. The policy names fewer seats and leaves some model seats out along with the probes. This is a result, not a failed run. In this round it was already present before training.
 - Unchanged prior. Training does not move what the frozen model already does. This is the outcome this round supports.
 
@@ -38,7 +39,7 @@ The model is Qwen 3.8 27B, thinking off, temperature 0.4, through Fireworks. The
 
 The training method is a group-relative policy update. Several rollouts are scored. A rollout that scores above the group mean is reinforced. One that scores below it is not. The score is the seat's own payoff from the decision to the end of the episode, not a reputation bonus.
 
-The first attempt did not implement that. Log probabilities were often missing and were replaced with zeros, so the importance ratio was one for every token. The return held the other seats' later actions fixed, so a reply that contributed nothing was never dropped in the counterfactual. What that return could pay was naming seats that were already naming you, because a pair needs both sides. That predicts a clique. Those files are kept. They are not cited as a training effect. They are a caution: a flawed update produced a dramatic, convincing-looking freeze-out of free riders. Combined with the frozen baselines, that contrast is worth a short note. It should not be lost as a failed pilot.
+The first attempt did not implement that. Log probabilities were often missing and were replaced with zeros, so the importance ratio was one for every token. The return held the other seats' later actions fixed, so a reply that contributed nothing was never dropped in the counterfactual. What that return could pay was naming seats that were already naming you, because a pair needs both sides. That predicts a clique. Those files are kept. They are not cited as a training effect. They are a caution: a flawed update produced a dramatic, convincing-looking freeze-out of free riders. Combined with the frozen baselines, that contrast is worth a short note. It should not be lost as a failed pilot. Do not replicate that update.
 
 The later attempt fixed both points. Four complete episodes shared a starting list of ids. The score was each seat's payoff over the whole episode, so other seats could react. Log probabilities were requested, and the step aborted if they were missing. A placebo arm shuffled the four returns before the advantage, so a step still ran, but it was not paid by the game. Measurement had to finish in the same process. A fresh process cannot reload a saved snapshot: the call returns 404.
 
@@ -74,23 +75,37 @@ The old trained files, seeds 14 to 16, named the zero 0, 0, and 2 times out of 1
 
 ## Unreadable replies
 
-About 17 of 100 untrained replies failed on Fireworks. The earlier OpenRouter ledger file had essentially none. That points to the prompt wrapper or the chat template, not to the game. Fixing it is free. It does not need Fireworks or a GPU. Any later attempt needs this fixed first. A later round also needs the unreadable rate under about 5 out of 100, or selectivity cannot be read.
+About 17 of 100 untrained replies failed on Fireworks. The earlier OpenRouter ledger file had essentially none. That points to the prompt wrapper or the chat template, not to the game.
+
+A local recovery is in `agents/train/parse_reply.py`. It closes a cut-off object when the written keys are intact, accepts a string or null nomination, and reads a contribution written as text. A reply with no object still fails closed. The check `python -m agents.train.parse_reply` printed `parse_ok 5` on 8 October. The reply cap is now 160 tokens, and the prompt asks for only the JSON object. The live rate is unmeasured. A later round still needs fewer than about 5 unreadable replies out of 100 before any paid step.
 
 Messages were in the design and were passed as an empty inbox. Nothing in these files says whether a message changes a nomination. That question is deferred, not dropped.
 
-A saved adapter cannot be sampled in a new process. The measurement episodes exist because they finished before the process exited.
+A saved adapter cannot be sampled in a new process. The measurement episodes exist because they finished before the process exited. A later run has to measure before it exits, until a reload works.
 
 ## What can be claimed
 
-- A working, cheap environment and pipeline, reusable for a later attempt. The payoff and placebo path is `agents/train/long_group.py`. The same-id untrained path is `agents/train/frozen_seed40.py`. The log-probability check is `agents/train/logprob_smoke.py`.
+- A working, cheap environment and pipeline, reusable for a later attempt. The payoff and placebo path is `agents/train/long_group.py`. The same-id untrained path is `agents/train/frozen_seed40.py`. The log-probability check is `agents/train/logprob_smoke.py`. The reply recovery is `agents/train/parse_reply.py`.
 - Frozen Qwen 3.8 27B shows first-order discrimination, a 1 over a 0, and some in-group formation, without any training.
 - One valid update did not change that.
 - A broken update can manufacture the appearance of emergent exclusion.
 
 ## Why this round stops
 
-The PI no-go matches the deciding file. The remaining cap stays unspent. Another training group in this setup would buy another copy of the prior, or another damaged placebo. A low-temperature parse run is not recommended as a Fireworks spend. The parse fix is a local prompt change.
+The PI no-go matches the deciding file. The remaining cap stays unspent. Another training group in this setup would buy another copy of the prior, or another damaged placebo. A low-temperature parse run is not recommended as a Fireworks spend. The leftover $30 is not the budget for a later round.
 
 ## What a later round would need
 
-A later proposal is not this tranche reopened. It would need fewer than about 5 unreadable replies out of 100, an untrained episode on the same ids as the trained episode, and a placebo that does not wreck the output. It would also need a budget for many training steps, read as a learning curve, rather than a single update. This round never had that piece. Eight seats stay. Messages stay off until the comparison exists. Sixteen seats stay out. The claim, if any, is sharper exclusion against the frozen prior. Closure and an unchanged prior remain named outcomes. The thesis stays open.
+A later proposal is not this tranche reopened. It starts only if all of these hold.
+
+The live unreadable rate is under about 5 out of 100, on the recovered parser, before any step. An untrained episode is run on the same ids as the trained episode. A placebo is run on those ids, and it does not wreck the output. The selectivity count is printed beside names per reply. Eight seats stay. Messages stay off. Sixteen seats stay out. Learning rate stays at `1e-5`. Log probabilities are required. A missing log probability aborts the step. Measurement finishes in the saving process.
+
+The length this round never had is a learning curve, not one update. A later run is eight updates. Each update is four complete episodes of twenty rounds, five model seats, same ids within the group. That is about 400 training samples per update, the size of the payoff group already run. Measure, with no further step, after updates 1, 4, and 8, on those same ids, one episode of twenty rounds each time. Stop after update 1 if the high-versus-zero contrast sits inside the untrained range. The untrained episode is the first file, before update 1. A placebo group is one update only, after the parse rate is low, not eight.
+
+Eight updates are a new budget. At the rate of this round, one update was a few dollars inside the $10. Eight updates, plus the three measurement episodes and one placebo, are on the order of $40 to $80, separate from the unspent remainder. Graded probes at 0, 0.3, 0.7, and 1 can replace the three scripted seats in that run. They are not a reason to start.
+
+The claim, if any, is sharper exclusion against the frozen prior, read off the curve. Closure and an unchanged prior remain named outcomes. The thesis stays open.
+
+## Sign-off
+
+This round is closed. No further Fireworks run. The report, the seed-40 files, and the local parse check are the handoff.
