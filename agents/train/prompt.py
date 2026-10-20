@@ -7,7 +7,7 @@ user message, with thinking off. A raw completion of the block does not parse.
 from __future__ import annotations
 
 
-def rendered_prompt(tokenizer, seat: str, env, order: list[str], inbox: list[str]) -> str:
+def rendered_prompt(tokenizer, seat: str, env, order: list[str], inbox: list[str], extra: str = "") -> str:
     from envs.pgg_scripted.run_frozen import prompt_for
 
     body = prompt_for(seat, env, order, inbox)
@@ -15,6 +15,8 @@ def rendered_prompt(tokenizer, seat: str, env, order: list[str], inbox: list[str
         "\nReply with only the JSON object. nominate is a list of seat ids. "
         "contribute is a number. Keep the message under ten words."
     )
+    if extra:
+        body += "\n" + extra
     messages = [{"role": "user", "content": body}]
     try:
         return tokenizer.apply_chat_template(
