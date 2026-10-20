@@ -114,10 +114,6 @@ async def episode(sampler, tokenizer, arm, seed):
         env.last_c = contrib
         print(arm, "seed", seed, "t", t, "fails", fails, flush=True)
     print("wrote", path, "fails", fails, flush=True)
-    if arm == "window":
-        model = [i for i in ids if i not in (reformer, steady, zero)]
-        early = [row for row in json.loads(line) for line in path.read_text().splitlines() if line.strip()]
-        # re-read is messy; compute from the written file below in main
     return path
 
 
