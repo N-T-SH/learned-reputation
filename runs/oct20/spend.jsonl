@@ -2,3 +2,10 @@
 {"step": "probes-fireworks", "calls": 240, "note": "model=qwen3.8-27b or_price=$0.10 / $0.50 per 1M tokens"}
 {"step": "probes-openrouter", "calls": 240, "note": "model=anthropic_claude-haiku-5.5 or_price=$0.10 / $0.50 per 1M tokens"}
 {"step": "game", "arm": "window", "seed": 0, "calls": 120}
+{"step": "game", "arm": "window", "seed": 1, "calls": 120}
+{"step": "game", "arm": "recency", "seed": 0, "calls": 120}
+{"step": "game", "arm": "recency", "seed": 1, "calls": 120}
+{"step": "game", "arm": "full", "seed": 0, "calls": 120}
+{"step": "game", "arm": "full", "seed": 1, "calls": 120}
+{"step": "game", "arm": "fixed", "seed": 0, "calls": 120}
+{"step": "game", "arm": "fixed", "seed": 1, "calls": 120}
