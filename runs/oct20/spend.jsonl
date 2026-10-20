@@ -1,0 +1,2 @@
+{"step": "probes-fake", "calls": 48, "note": "model=fake or_price=$0.10 / $0.50 per 1M tokens"}
+{"step": "probes-fireworks", "calls": 240, "note": "model=qwen3.8-27b or_price=$0.10 / $0.50 per 1M tokens"}
