@@ -3,6 +3,7 @@
 allowed may be a seat count, or the ids for this episode.
 A 6-character label is a valid id. A missing message, a null nominate, or a
 numeric string can be recovered. A reply with no object still fails closed.
+partners is accepted when nominate is absent. The env still stores nominate.
 """
 
 from __future__ import annotations
@@ -31,6 +32,8 @@ def repair(raw, allowed) -> tuple[dict, bool]:
     if not isinstance(message, str):
         message = str(message)
     noms = raw.get("nominate")
+    if noms is None and "partners" in raw:
+        noms = raw.get("partners")
     if noms is None or noms is False:
         noms = []
     elif isinstance(noms, str):
