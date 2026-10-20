@@ -9,3 +9,4 @@
 {"step": "game", "arm": "full", "seed": 1, "calls": 120}
 {"step": "game", "arm": "fixed", "seed": 0, "calls": 120}
 {"step": "game", "arm": "fixed", "seed": 1, "calls": 120}
+{"step": "game", "arm": "window", "seed": 0, "calls": 120}
