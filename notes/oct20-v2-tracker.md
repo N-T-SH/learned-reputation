@@ -39,6 +39,14 @@ Parse gate passed: `window_s0_v2` had 0 repair failures. A leftover line after t
 
 Sanity line, rounds 1–8, not a gate. Window seed 0: steady 9, zero 15. Window seed 1: steady 1, zero 7. No change made because of it.
 
+### window_s0_v2 commit check, 20 Oct
+
+`window_s0_v2.jsonl` has one commit, `9e1acdc`, message `rerun`, status `added`, 24 lines. The committed file has rounds 0–23 once. No duplicate rounds. The script appends, so a second run without deleting the file would have made 48 rows. Git has no earlier version to keep.
+
+The other three files were added once, in `94935c70`, message `v2 remaining`.
+
+Unresolved: whether the local crash file was deleted and the episode sampled again. Nitesh to say.
+
 ### V2-c
 
 P1 failed. P3 failed. P4 failed. T1 failed. T2 reported. T3 not tested.
