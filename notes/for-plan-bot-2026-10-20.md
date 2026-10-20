@@ -2,17 +2,19 @@
 
 **Repo:** `N-T-SH/learned-reputation`
 **Pre-registration:** `878692c` in `notes/prereg-2026-10-20.md`. Committed before any paid call.
-**Status:** Step 1 probes are in. Step 2 game runs have not started. No training.
+**Status:** v1 and v2 game files are in. Report is `notes/report-2026-10-20-v2.md`.
 
 ## Spend
 
 `runs/oct20/spend.jsonl` has call counts only, not dollars.
 
 - Fake dry run: 48 calls, $0.
-- Fireworks Qwen 3.8 27B: 240 calls.
-- OpenRouter `anthropic/claude-haiku-5.5`: 240 calls. List price $0.10 / $0.50 per 1M tokens.
+- Fireworks Qwen 3.8 27B probes: 240 calls, $0.24.
+- OpenRouter `anthropic/claude-haiku-5.5`: 240 calls, $0.03.
+- v1 game runs: 8 episodes, about $1.
+- v2 game runs: 4 episodes, about $0.50.
 
-Cap is $8. Nitesh has the dollar total. Do not open the game runs until that number is known.
+Cap is $8. Nitesh has the exact total. Rough running total is about $1.80.
 
 ## What can be scored
 
@@ -34,44 +36,17 @@ File: `runs/oct20/probes/qwen3.8-27b.jsonl`. 240 calls. Repair: 192 ok, 33 non-J
 
 T4, as written, failed on this model. P(named | good record, bad last move) is 0.1. P(named | bad record, good last move) is 0.3. The last move beat the longer record on the conflict cell.
 
-A1 and A4 do show a preference for a clean all-1s record over a record that contains zeros, when the last move is also good. That is not the T4 contrast.
-
-Forgiveness surface, P(named target):
-
-| bad rounds \ good rounds | 1 | 3 | 6 |
-|---|---|---|---|
-| 2 | 0.5 | 0.5 | 0.5 |
-| 6 | 0.4 | 0.5 | 0.7 |
-| 12 | 0.2 | 0.4 | 0.5 |
-
-A long bad record with one good round is the lowest cell. There is no clean dose curve. n=10 per cell.
-
-Leading Eight, P(named D):
-
-- Justification, good-record D: refused a bad partner 0.1, included a good partner 0.4. Not "about as often."
-- Apology, bad-record D: included a good partner 0.2, did not 0.0. Direction matches. The gap is one or two namings in ten.
-
 ### Haiku 5.5, OpenRouter
 
-File: `runs/oct20/probes/anthropic_claude-haiku-5.5.jsonl`. 240 calls. Repair: 9 ok, 5 unknown id, 9 non-JSON, 217 empty.
+File: `runs/oct20/probes/anthropic_claude-haiku-5.5.jsonl`. 240 calls. Repair: 9 ok, 5 unknown id, 9 non-JSON, 217 empty. Not a behavioral result. Left out of the scored report.
 
-This is not a behavioral result. 217 replies had empty `content`. The 23 non-empty ones are mostly a cut-off `partners` object or a sentence. T4 cannot be scored on this model. A rerun would need the reader to capture a reasoning field and to send thinking off. Do not treat the zeros as a null on the claim.
+## v2, rules in the prompt
 
-## Pre-registered predictions, probes only
+Four episodes. Repair 0 of 480. Same seed now shares id order and role seats.
 
-- T4: failed on Qwen. Unscorable on Haiku. Not held in both models.
-- Leading Eight justification: failed on Qwen.
-- Leading Eight apology: direction held on Qwen, n too small to call.
-- P1, P3, P4, T1, T2, T3: not tested. Those need the game runs.
+- Window seed 0: reformer 4/80, steady 16, zero 24, not readmitted, contribution 0.721, partners per reply 0.98.
+- Window seed 1: reformer 0/80, steady 0, zero 16, not readmitted, contribution 0.508, partners per reply 0.98.
+- Full seed 0: reformer 16/80, steady 0, zero 32, not readmitted, contribution 0.700, partners per reply 0.97.
+- Full seed 1: reformer 32/80, steady 0, zero 42, latency 1, contribution 0.613, partners per reply 1.32.
 
-## What is not done
-
-Step 2 has not started. No memory-window episode, no fixed-group control, no reformer latency. The harness is `agents/probes/oct20_game.py`. The parse gate is window seed 0: stop the game runs if more than 15 of the first 50 replies fail.
-
-## Recommendation
-
-Do not spend the rest of the $8 on a Haiku rerun unless the interview needs a second model. The Qwen probe file already answers the probe question: on the conflict cell, recency beat the longer record.
-
-If dollars remain, the highest-value next file is one window-5 choice episode, seed 0, as the parse gate. If it passes, the other seven episodes are the pre-registered game comparison. If it fails, stop and report the repair types.
-
-No interpretation beyond held, failed, or unscorable. Nitesh writes that.
+P1 failed. P3 failed. P4 failed. T1 failed. T2 reported. T3 not tested. Full report: `notes/report-2026-10-20-v2.md`.
