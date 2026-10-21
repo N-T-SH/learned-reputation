@@ -13,6 +13,12 @@
 | [`t2-gate.md`](t2-gate.md) | Frozen N=8 before-picture gate (5 Oct), plus the 8 Oct T3 no-go decision | current |
 | [`grpo-step-mechanics.md`](grpo-step-mechanics.md) | How one Fireworks LoRA GRPO step works on this game (reusable reference) | current (reference) |
 | [`tranche2-tracker.md`](tranche2-tracker.md) | T2 tracker. FINISHED 6 Oct as a pipeline tranche, closed 8 Oct | closed. Kept here because `skills/lab-coordination/SKILL.md` and the root `README.md` name it |
+| [`prereg-2026-10-20.md`](prereg-2026-10-20.md) | 20 Oct frozen-agent preview pre-registration (`878692c`). Do not edit | current |
+| [`report-2026-10-20.md`](report-2026-10-20.md) | 20 Oct v1 report: probes + 8 game episodes. Game files not readable as partner choice (rules not in prompt) | superseded by v2 for the game |
+| [`audit-2026-10-20.md`](audit-2026-10-20.md) | Audit of the 20 Oct v1 files. No role bug, no rerun | current |
+| [`oct20-v2-tracker.md`](oct20-v2-tracker.md) | 20 Oct v2 instrument-fix tracker. FINISHED | closed |
+| [`report-2026-10-20-v2.md`](report-2026-10-20-v2.md) | 20 Oct v2 report: 4 episodes, P1/P3/P4/T1 failed | current |
+| [`for-plan-bot-2026-10-20.md`](for-plan-bot-2026-10-20.md) | Implementation bot → plan bot summary for 20 Oct, with recomputed probe rates and spend | current |
 | [`for-implementation-bot.md`](for-implementation-bot.md) | Plan bot → implementation bot rules doc. Its standing rules still apply; the "Active work" section is historical | current (rules). Kept here, `SKILL.md` names it |
 | [`for-plan-bot.md`](for-plan-bot.md) | Implementation bot → plan bot note, 2 Oct | stale. Kept here, `SKILL.md` names it |
 | [`archive/reports/technical-report-2026-10-03.md`](archive/reports/technical-report-2026-10-03.md) | Frozen baselines through 3 Oct; OpenRouter costs; Fireworks path found | archived |
@@ -35,3 +41,4 @@
 
 ---
 **Signed:** ReputationLearning — 2026-10-08 ~15:57 IST — Created the notes index after the round close and the archive tidy.
+**Signed:** ReputationLearning — 2026-10-21 ~19:50 IST — Indexed the six 20 Oct preview notes.
